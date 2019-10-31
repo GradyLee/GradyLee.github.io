@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>寄存器与数据类型 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。本文链接：https:&#x2F;&#x2F;blog.csdn.net&#x2F;WarEric&#x2F;article&#x2F;details&#x2F;79954102 寄存器  x86-64结构的CPU包含一组16个存储64位值的通用目的寄存器；历史上最开始的寄存器只有8个8位的寄存器，后来经历了16位， 32位直至现在的64位，寄存器也由8">
+<meta property="og:type" content="article">
+<meta property="og:title" content="寄存器与数据类型">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;08&#x2F;03&#x2F;%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B&#x2F;index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。本文链接：https:&#x2F;&#x2F;blog.csdn.net&#x2F;WarEric&#x2F;article&#x2F;details&#x2F;79954102 寄存器  x86-64结构的CPU包含一组16个存储64位值的通用目的寄存器；历史上最开始的寄存器只有8个8位的寄存器，后来经历了16位， 32位直至现在的64位，寄存器也由8">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-31T10:07:27.783Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-寄存器与数据类型" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="article-date">
+  <time datetime="2019-08-03T07:35:23.000Z" itemprop="datePublished">2019-08-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      寄存器与数据类型
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。<br>本文链接：<a href="https://blog.csdn.net/WarEric/article/details/79954102" target="_blank" rel="noopener">https://blog.csdn.net/WarEric/article/details/79954102</a></p>
+<p><strong>寄存器</strong></p>
+<ul>
+<li>x86-64结构的CPU包含一组16个存储64位值的通用目的寄存器；历史上最开始的寄存器只有8个8位的寄存器，后来经历了16位， 32位直至现在的64位，寄存器也由8个扩展到16个。</li>
+<li>程序可以依据每个寄存器的名称使用其中的8位，或16位，或32位，或64位；使用每个寄存器有约定的使用目的。<br>下面以表格的形式给出寄存器的名称与用法</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">63</th>
+<th align="center">31</th>
+<th align="center">15</th>
+<th align="center">7</th>
+<th align="center">0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">%rax</td>
+<td align="center">%eax</td>
+<td align="center">%ax</td>
+<td align="center">%al</td>
+<td align="center">返回值</td>
+</tr>
+<tr>
+<td align="center">%rbx</td>
+<td align="center">%ebx</td>
+<td align="center">%bx</td>
+<td align="center">%bl</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%rcx</td>
+<td align="center">%ecx</td>
+<td align="center">%cx</td>
+<td align="center">%cl</td>
+<td align="center">第4个参数</td>
+</tr>
+<tr>
+<td align="center">%rdx</td>
+<td align="center">%edx</td>
+<td align="center">%dx</td>
+<td align="center">%dl</td>
+<td align="center">第3个参数</td>
+</tr>
+<tr>
+<td align="center">%rsi</td>
+<td align="center">%esi</td>
+<td align="center">%si</td>
+<td align="center">%sil</td>
+<td align="center">第2个参数</td>
+</tr>
+<tr>
+<td align="center">%rdi</td>
+<td align="center">%edi</td>
+<td align="center">%di</td>
+<td align="center">%dil</td>
+<td align="center">第1个参数</td>
+</tr>
+<tr>
+<td align="center">%rbp</td>
+<td align="center">%ebp</td>
+<td align="center">%bp</td>
+<td align="center">%bpl</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%rsp</td>
+<td align="center">%esp</td>
+<td align="center">%sp</td>
+<td align="center">%spl</td>
+<td align="center">栈指针</td>
+</tr>
+<tr>
+<td align="center">%r8</td>
+<td align="center">%r8d</td>
+<td align="center">%r8w</td>
+<td align="center">%r8b</td>
+<td align="center">第5个参数</td>
+</tr>
+<tr>
+<td align="center">%r9</td>
+<td align="center">%r9d</td>
+<td align="center">%r9w</td>
+<td align="center">%r9b</td>
+<td align="center">第6个参数</td>
+</tr>
+<tr>
+<td align="center">%r10</td>
+<td align="center">%r10d</td>
+<td align="center">%r10w</td>
+<td align="center">%r10b</td>
+<td align="center">调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r11</td>
+<td align="center">%r11d</td>
+<td align="center">%r11w</td>
+<td align="center">%r11b</td>
+<td align="center">调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r12</td>
+<td align="center">%r12d</td>
+<td align="center">%r12w</td>
+<td align="center">%r12b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r13</td>
+<td align="center">%r13d</td>
+<td align="center">%r13w</td>
+<td align="center">%r13b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r14</td>
+<td align="center">%r14d</td>
+<td align="center">%r14w</td>
+<td align="center">%r14b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r15</td>
+<td align="center">%r15d</td>
+<td align="center">%r15w</td>
+<td align="center">%r15b</td>
+<td align="center">被调用者保存</td>
+</tr>
+</tbody></table>
+<p>注：%rip是程序计数器，与这16个不同。</p>
+<ul>
+<li>调用者保存是指当P函数调用Q函数时，该寄存器中的内容由调用者P负责保存，Q可以直接使用该寄存器。</li>
+<li>被调用者保存是指当P函数调用Q函数时，该寄存器中的内容由被调用者Q负责保存，Q在使用这些寄存器前应当先把这些寄存器内的值存入栈中，Q返回之前应当将对应的值从栈中恢复到寄存器上。</li>
+</ul>
+<p><strong>数据类型</strong></p>
+<p>以下是64位结构上对应的数据类型。Intel用术语“字word”表示16位的数据类型；byte表示字节，long word表示32位，q表示64位</p>
+<table>
+<thead>
+<tr>
+<th align="center">C声明</th>
+<th align="center">Intel数据类型</th>
+<th align="center">汇编代码后缀</th>
+<th align="center">大小(字节)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">char</td>
+<td align="center">字节</td>
+<td align="center">b</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center">short</td>
+<td align="center">字    w</td>
+<td align="center">2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">int</td>
+<td align="center">双字</td>
+<td align="center">l</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="center">long</td>
+<td align="center">四字</td>
+<td align="center">q</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">char*</td>
+<td align="center">四字</td>
+<td align="center">q</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">float</td>
+<td align="center">单精度</td>
+<td align="center">s</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="center">double</td>
+<td align="center">双精度</td>
+<td align="center">l</td>
+<td align="center">8</td>
+</tr>
+</tbody></table>
+<p><strong>cpu寻址</strong></p>
+<p>cpu操作数据就需要知道数据的地址，通过寻址来实现。寻址分为直接寻址和间接寻址。以下做一些解释。</p>
+<p>操作数： </p>
+<ul>
+<li>立即数 $标准C表示法表示的整数 </li>
+<li>寄存器 R[ra] </li>
+<li>内存引用 Mb[Addr]<br>Imm(rb, ri, s): 有效地址 Imm+R[rb]+R[ri]<em>s; *注意两个rb,ri都必须是64位寄存器，比例因子s必须是1, 2, 4或8</em></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="center">格式</th>
+<th align="center">操作数值</th>
+<th align="center">名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">立即数</td>
+<td align="center">$Imm</td>
+<td align="center">Imm</td>
+<td align="center">立即数寻址</td>
+</tr>
+<tr>
+<td align="center">寄存器</td>
+<td align="center">ra</td>
+<td align="center">R[ra]</td>
+<td align="center">寄存器寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm</td>
+<td align="center">M[Imm]</td>
+<td align="center">绝对寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(ra)</td>
+<td align="center">M[R[ra]</td>
+<td align="center">间接寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb)</td>
+<td align="center">M[Imm+R[rb]]</td>
+<td align="center">(基地址+偏移量)寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(rb, ri)</td>
+<td align="center">M[R[rb]+R[ri]]</td>
+<td align="center">变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb, ri)</td>
+<td align="center">M[Imm+R[rb]+R[ri]]</td>
+<td align="center">变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(, ri, s)</td>
+<td align="center">M[R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(, ri, s)</td>
+<td align="center">M[Imm+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(rb, ri, s)</td>
+<td align="center">M[R[rb]+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb, ri, s)</td>
+<td align="center">M[Imm+R[rb]+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">任何操作都不能直接进行内存到内存数据修改，要实现内存到内存的数据操作只能先将数据修改到寄存器，然后再通过寄存器修改到内存</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>————————————————</p>
+<p>版权声明：本文为CSDN博主「WarEric」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a href="https://blog.csdn.net/WarEric/article/details/79954102" target="_blank" rel="noopener">https://blog.csdn.net/WarEric/article/details/79954102</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" data-id="ck2ejycr900042onsbb64dq08" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          问题排查工具介绍之ltrace
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">寄存器英文全称</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/">问题排查工具介绍之ltrace</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">寄存器与数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/">寄存器英文全称</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">汇编语言（第三版）王爽 读书笔记</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

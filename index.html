@@ -61,10 +61,10 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-SystemTap使用技巧之四" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-GDB高级用法" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" class="article-date">
-  <time datetime="2019-10-31T08:31:01.000Z" itemprop="datePublished">2019-10-31</time>
+    <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" class="article-date">
+  <time datetime="2019-10-31T01:54:51.000Z" itemprop="datePublished">2019-10-31</time>
 </a>
     
   </div>
@@ -75,7 +75,1011 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
+      <a class="article-title" href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-条件断点"><a href="#1-条件断点" class="headerlink" title="1. 条件断点"></a>1. 条件断点</h2><p>用法：<code>break [LOCATION] [thread THREADNUM] [if CONDITION]</code></p>
+<p>test.c</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">\#include &lt;stdio.h&gt; </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">     int i,j;</span><br><span class="line">     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">     &#123;                                                                                                                                                      </span><br><span class="line">         j = i + 1;</span><br><span class="line">         printf(&quot;%d/n&quot;, j);</span><br><span class="line">     &#125;</span><br><span class="line">     return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译：<code>gcc -g test.c -o foo</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Breakpoint 1, main () at test.c:5</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) b 8 if j == 5</span><br><span class="line">Breakpoint 2 at 0x4004b2: file test.c, line 8.</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 2, main () at test.c:8</span><br><span class="line">8	         printf(&quot;%d/n&quot;, j);</span><br><span class="line">(gdb) p j</span><br><span class="line">$1 = 5</span><br><span class="line">(gdb) n</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) n</span><br><span class="line">7	         j = i + 1;</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">1/n2/n3/n4/n5/n6/n7/n8/n9/n10/n</span><br><span class="line">Program exited normally.</span><br><span class="line">(gdb) q</span><br><span class="line">[root@bogon learn]#</span><br></pre></td></tr></table></figure>
+<p>当j==5的时候，程序就停在那里了。这里值得注意的是，你可以使断点在指定线程中生效。只要带上thread THREADNUM即可。THREADNUM就是通过<br>info threads打印出的线程编号，例如1，2，3.</p>
+<h2 id="2-观察点"><a href="#2-观察点" class="headerlink" title="2. 观察点"></a>2. 观察点</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(gdb) watch j</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line"></span><br><span class="line">Old value = 0</span><br><span class="line">New value = 1</span><br><span class="line">main () at test.c:28</span><br><span class="line">28            printf(&quot;%d/n&quot;, j);</span><br></pre></td></tr></table></figure>
+<h2 id="3-模糊断点"><a href="#3-模糊断点" class="headerlink" title="3. 模糊断点"></a>3. 模糊断点</h2><p>通过rb命令可以批量指定符合规则的函数断点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">(gdb) rb ngx_worker_*</span><br><span class="line">(gdb) info b</span><br><span class="line">Num     Type           Disp Enb Address            What</span><br><span class="line">1       breakpoint     keep y   0x000000000044e5d0 in ngx_worker_process_cycle at src/os/unix/ngx_process_cycle.c:848</span><br><span class="line">2       breakpoint     keep y   0x000000000044e2d0 in ngx_worker_process_exit at src/os/unix/ngx_process_cycle.c:1069</span><br><span class="line">3       breakpoint     keep y   0x000000000044dc20 in ngx_worker_process_init at src/os/unix/ngx_process_cycle.c:901</span><br><span class="line">4       breakpoint     keep y   0x00000000004ff8a0 in ngx_http_lua_ngx_worker_count at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:83</span><br><span class="line">5       breakpoint     keep y   0x00000000004ff930 in ngx_http_lua_ngx_worker_exiting at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:48</span><br><span class="line">6       breakpoint     keep y   0x00000000004ff8f0 in ngx_http_lua_ngx_worker_id at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:64</span><br><span class="line">7       breakpoint     keep y   0x00000000004ff8d0 in ngx_http_lua_ngx_worker_pid at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:56</span><br><span class="line">8       breakpoint     keep y   0x0000000000540e10 in ngx_stream_lua_ngx_worker_count at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:83</span><br><span class="line">9       breakpoint     keep y   0x0000000000540ea0 in ngx_stream_lua_ngx_worker_exiting at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:48</span><br><span class="line">10      breakpoint     keep y   0x0000000000540e60 in ngx_stream_lua_ngx_worker_id at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:64</span><br><span class="line">11      breakpoint     keep y   0x0000000000540e40 in ngx_stream_lua_ngx_worker_pid at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:56</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-call命令"><a href="#4-call命令" class="headerlink" title="4. call命令"></a>4. call命令</h2><p>call func_name：调用和执行一个函数<br>(gdb) call gen_and_sork(1234, 1, 0)<br>(gdb) call printf(“abcd\n”)<br>abcd<br>$1=4<br>jump：在源程序中的另一点开始运行<br>(gdb)jump line_number</p>
+<h2 id="5-反向执行"><a href="#5-反向执行" class="headerlink" title="5. 反向执行"></a>5. 反向执行</h2><p>gdb 有一个超棒的功能叫回退</p>
+<p>这里我可以逐行或逐条指令的回退。它通过播放我们记录的寄存器状态来工作</p>
+<p><code>reverse-stepi    #回退一条指令</code><br>注意执行这条命令之前需要先执行record命令</p>
+<h2 id="6-x查看内存"><a href="#6-x查看内存" class="headerlink" title="6. x查看内存"></a>6. x查看内存</h2><p>语法：<code>x/&lt;n/f/u&gt; &lt;addr&gt;</code><br>n、f、u是可选的参数<br>n是一个正整数，表示需要显示的内存单元的个数，也就是说从当前地址向后显示几个内存单元的内容，一个内存单元的大小由后面的u定义。<br>f 表示显示的格式，参见下面。如果地址所指的是字符串，那么格式可以是s，如果地十是指令地址，那么格式可以是i。<br>u 表示从当前地址往后请求的字节数，如果不指定的话，GDB默认是4个bytes。u参数可以用下面的字符来代替，b表示单字节，h表示双字节，w表示四字 节，g表示八字节。当我们指定了字节长度后，GDB会从指内存定的内存地址开始，读写指定字节，并把其当作一个值取出来。<br><addr>表示一个内存地址。<br>注意：严格区分n和u的关系，n表示单元个数，u表示每个单元的大小。<br>输出格式</p>
+<p>一般来说，GDB会根据变量的类型输出变量的值。但你也可以自定义GDB的输出的格式。例如，你想输出一个整数的十六进制，或是二进制来查看这个整型变量的中的位的情况。要做到这样，你可以使用GDB的数据显示格式：</p>
+<p>x 按十六进制格式显示变量。<br>d 按十进制格式显示变量。<br>u 按十六进制格式显示无符号整型。<br>o 按八进制格式显示变量。<br>t 按二进制格式显示变量。<br>a 按十六进制格式显示变量。<br>c 按字符格式显示变量。<br>f 按浮点数格式显示变量。</p>
+<h2 id="7-跟踪到子进程"><a href="#7-跟踪到子进程" class="headerlink" title="7. 跟踪到子进程"></a>7. 跟踪到子进程</h2><p>(gdb) help set follow-fork-mode<br>Set debugger response to a program call of fork or vfork.<br>A fork or vfork creates a new process.  follow-fork-mode can be:<br>  parent  - the original process is debugged after a fork<br>  child   - the new process is debugged after a fork<br>The unfollowed process will continue to run.<br>By default, the debugger will follow the parent process.</p>
+<h2 id="8-多线程调试技巧"><a href="#8-多线程调试技巧" class="headerlink" title="8. 多线程调试技巧"></a>8. 多线程调试技巧</h2><p>(gdb) help set scheduler-locking<br>Set mode for locking scheduler during execution.<br>off  == no locking (threads may preempt at any time)<br>on   == full locking (no thread except the current thread may run)<br>step == scheduler locked during every single-step operation.<br>    In this mode, no other thread may run during a step command.<br>    Other threads may run while stepping over a function call (‘next’).</p>
+<h2 id="9-设置打印字符串长度"><a href="#9-设置打印字符串长度" class="headerlink" title="9. 设置打印字符串长度"></a>9. 设置打印字符串长度</h2><h2 id="10-执行外部命令"><a href="#10-执行外部命令" class="headerlink" title="10. 执行外部命令"></a>10. 执行外部命令</h2><p>(gdb) help shell<br>Execute the rest of the line as a shell command.<br>With no arguments, run an inferior shell.</p>
+<h2 id="11-gdbinit文件"><a href="#11-gdbinit文件" class="headerlink" title="11. gdbinit文件"></a>11. gdbinit文件</h2><p>GDB在启动时，会在用户主目录中寻找这个文件，并执行该文件中所有命令，文件格式为：<br>define command-alias<br>command<br>end<br>如要给“b main”取一个别名“bm”：<br>define bm<br>b main<br>end<br>此外，还可以给这个别名加上帮助说明性文字，格式为：<br>document bm<br>帮助说明性文字<br>end<br>如，给“bm”别名添加帮助说明性文字：<br>document bm<br>break at main() function<br>end<br>这样，在使用“help bm”时，GDB就会打印出“break at main() function”</p>
+<h2 id="12-自定义命令"><a href="#12-自定义命令" class="headerlink" title="12. 自定义命令"></a>12. 自定义命令</h2><p>除了在.gdbinit文件自定义命令外，还可以直接在GDB运行环境定义命令，语法相同</p>
+<h2 id="13-定义命令钩子"><a href="#13-定义命令钩子" class="headerlink" title="13. 定义命令钩子"></a>13. 定义命令钩子</h2><p>钩子用来在执行某个命令前或命令后，先执行某个或某些命令。假如想在print命令前显示一段“———-”，则：<br>define hook-print<br>echo ———-\n<br>end<br>注意“hook-”后接的必须是命令全称，不能是缩写。<br>如果想在命令执行完，再执行某个或某些命令，则：<br>#define hookpost-print<br>echo ———-\n<br>end</p>
+<h2 id="14-设置变量"><a href="#14-设置变量" class="headerlink" title="14. 设置变量"></a>14. 设置变量</h2><h2 id="15-循环"><a href="#15-循环" class="headerlink" title="15. 循环"></a>15. 循环</h2><p>GDB支持if/else/while/loop_break/loop_continue，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set $x=1</span><br><span class="line">(gdb) while $x==1</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;set $x=0</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;end</span><br></pre></td></tr></table></figure>
+<p>b$8 = 1<br>b$9 = 0</p>
+<h2 id="16-gdb脚本文件"><a href="#16-gdb脚本文件" class="headerlink" title="16. gdb脚本文件"></a>16. gdb脚本文件</h2><p>通过gdb的source命令我们可以将需要执行的GDB命令写到一个外部文件xxx.gdb中，实现gdb脚本编程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set $page = testpool-&gt;free.next</span><br><span class="line">while $page != &amp;testpool.shpool-&gt;free</span><br><span class="line">        if $page-&gt;slab &gt;= 15360</span><br><span class="line">		printf&quot;page slab = %d, page=%x\n&quot;, $page-&gt;slab, $page</span><br><span class="line">		set $page = $page-&gt;next</span><br><span class="line">        end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+<h2 id="17-非交互模式"><a href="#17-非交互模式" class="headerlink" title="17. 非交互模式"></a>17. 非交互模式</h2><p>如果程序正在运行，我们想要查看或者修改程序运行中的变量或者内存等，怎么办呢？这时候可以采用非交互模式运行GDB。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" data-id="ck2ejycqu00002onsas7me31s" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-问题排查工具介绍之ltrace" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" class="article-date">
+  <time datetime="2019-10-30T10:09:24.000Z" itemprop="datePublished">2019-10-30</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/">问题排查工具介绍之ltrace</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><strong>简介：</strong></p>
+<p>Trace library calls of a given program.</p>
+<p>ltrace命令是用来跟踪进程调用库函数的情况。</p>
+<p><strong>语法：</strong></p>
+<p>Usage: ltrace [option …] [command [arg …]]</p>
+<p><strong>常用参数：</strong></p>
+<p>  -a, –align=COLUMN  对齐具体某个列的返回值。</p>
+<p>  -c                  计算时间和调用，并在程序退出时打印摘要。</p>
+<p>  -C, –demangle      解码低级别名称（内核级）为用户级名称。</p>
+<p>  -d, –debug         打印调试信息。<br>      –dl            show calls to symbols in dlopened libraries.<br>  -e expr             改变跟踪的事件。</p>
+<p>  -f                  跟踪子进程。</p>
+<p>  -h, –help          打印帮助信息。</p>
+<p>  -i                  打印指令指针，当库调用时。</p>
+<p>  -l, –library=FILE  只打印某个库中的调用。</p>
+<p>  -L                  不打印库调用。</p>
+<p>  -n, –indent=NR     对每个调用级别嵌套以NR个空格进行缩进输出。</p>
+<p>  -o, –output=FILE   把输出定向到文件。</p>
+<p>  -p PID              附着在值为PID的进程号上进行ltrace。</p>
+<p>  -r                  打印相对时间戳。</p>
+<p>  -s STRLEN           设置打印的字符串最大长度。</p>
+<p>  -S                  显示系统调用。</p>
+<p>  -t, -tt, -ttt       打印绝对时间戳。</p>
+<p>  -T                  输出每个调用过程的时间开销。</p>
+<p>  -u USERNAME         使用某个用户id或组ID来运行命令。</p>
+<p>  -V, –version       打印版本信息，然后退出。</p>
+<p>  -x NAME             treat the global NAME like a library subroutine.</p>
+<p>Report bugs to <a href="mailto:ltrace-devel@lists.alioth.debian.org" target="_blank" rel="noopener">ltrace-devel@lists.alioth.debian.org</a></p>
+<p><strong>命令使用实例：</strong></p>
+<ol>
+<li><p>查看指定进程库函数调用情况</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@lzq ~]# ltrace -p 44802,44803 -C -i -n 4 -S -t -T</span><br><span class="line">18:16:32 [0x45030a] __errno_location()                                                 = 0x7fa51ea25768 &lt;0.000252&gt;</span><br><span class="line">18:16:32 [0x431852] gettimeofday(0x7fff7ba12670, NULL)                                 = 0 &lt;0.000265&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b627b, &quot;30&quot;, 2)                                          = 0x7b627b &lt;0.000192&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b628d, &quot;32&quot;, 2)                                          = 0x7b628d &lt;0.000183&gt;</span><br><span class="line">18:16:32 [0x4487c7] localtime_r(0x7fff7ba125a8, 0x7fff7ba12630, 0x54faaa, 12851, 0)    = 0x7fff7ba12630 &lt;0.000170&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b5d44, &quot;2019&quot;, 4)                                        = 0x7b5d44 &lt;0.000158&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b76fd, &quot;32&quot;, 2)                                          = 0x7b76fd &lt;0.000159&gt;</span><br><span class="line">18:16:32 [0x422f4c] memcpy(0x7fff7ba115b0, &quot;2019/10/30 18:16:32&quot;, 19)                  = 0x7fff7ba115b0 &lt;0.000175&gt;</span><br><span class="line">18:16:32 [0x4294d5] memcpy(0x7fff7ba115c5, &quot;info&quot;, 4)                                  = 0x7fff7ba115c5 &lt;0.000154&gt;</span><br><span class="line">18:16:32 [0x448858] memcpy(0x7fff7ba115ec, &quot;Interrupted system call&quot;, 23)              = 0x7fff7ba115ec &lt;0.000153&gt;</span><br><span class="line">18:16:32 [0x4230f5] write(4, &quot;2019/10/30 18:16:32 [info] 44802&quot;..., 85 &lt;unfinished ...&gt;</span><br><span class="line">18:16:32 [0x380aa0e7b0]     SYS_write(4, &quot;2019/10/30 18:16:32 [info] 44802&quot;..., 85)    = 85 &lt;0.000055&gt;</span><br><span class="line">18:16:32 [0x4230f5] &lt;... write resumed&gt; )                                              = 85 &lt;0.000429&gt;</span><br><span class="line">18:16:32 [0x450118] epoll_wait(12, 0xad3370, 512, 0xffffffff, 0 &lt;unfinished ...&gt;</span><br></pre></td></tr></table></figure>
+<p>通过这个命令可以查看指定进程库函数调用的具体情况，包括调用时间，消耗时长，指令地址。</p>
+</li>
+<li><p>以统计的形式查看库函数调用的情况</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@lzq ~]# ltrace -p 44802,44803 -C -i -n 4 -S -t -T -c</span><br><span class="line">^C% time     seconds  usecs/call     calls      function</span><br><span class="line">------ ----------- ----------- --------- --------------------</span><br><span class="line"> 49.93    4.664301     4664301         1 epoll_wait</span><br><span class="line"> 49.93    4.664030     4664030         1 SYS_epoll_wait</span><br><span class="line">  0.11    0.010485         158        66 memcpy</span><br><span class="line">  0.01    0.000510         255         2 localtime_r</span><br><span class="line">  0.00    0.000461         461         1 accept</span><br><span class="line">  0.00    0.000410         205         2 gettimeofday</span><br><span class="line">  0.00    0.000395         197         2 __errno_location</span><br><span class="line">  0.00    0.000230         230         1 write</span><br><span class="line">  0.00    0.000052          52         1 SYS_write</span><br><span class="line">  0.00    0.000037          37         1 SYS_accept</span><br><span class="line">------ ----------- ----------- --------- --------------------</span><br><span class="line">100.00    9.340911                    78 total</span><br></pre></td></tr></table></figure></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" data-id="ck2ejycri00082onsg9a19gfx" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-寄存器与数据类型" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" class="article-date">
+  <time datetime="2019-08-03T07:35:23.000Z" itemprop="datePublished">2019-08-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">寄存器与数据类型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。<br>本文链接：<a href="https://blog.csdn.net/WarEric/article/details/79954102" target="_blank" rel="noopener">https://blog.csdn.net/WarEric/article/details/79954102</a></p>
+<p><strong>寄存器</strong></p>
+<ul>
+<li>x86-64结构的CPU包含一组16个存储64位值的通用目的寄存器；历史上最开始的寄存器只有8个8位的寄存器，后来经历了16位， 32位直至现在的64位，寄存器也由8个扩展到16个。</li>
+<li>程序可以依据每个寄存器的名称使用其中的8位，或16位，或32位，或64位；使用每个寄存器有约定的使用目的。<br>下面以表格的形式给出寄存器的名称与用法</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">63</th>
+<th align="center">31</th>
+<th align="center">15</th>
+<th align="center">7</th>
+<th align="center">0</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">%rax</td>
+<td align="center">%eax</td>
+<td align="center">%ax</td>
+<td align="center">%al</td>
+<td align="center">返回值</td>
+</tr>
+<tr>
+<td align="center">%rbx</td>
+<td align="center">%ebx</td>
+<td align="center">%bx</td>
+<td align="center">%bl</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%rcx</td>
+<td align="center">%ecx</td>
+<td align="center">%cx</td>
+<td align="center">%cl</td>
+<td align="center">第4个参数</td>
+</tr>
+<tr>
+<td align="center">%rdx</td>
+<td align="center">%edx</td>
+<td align="center">%dx</td>
+<td align="center">%dl</td>
+<td align="center">第3个参数</td>
+</tr>
+<tr>
+<td align="center">%rsi</td>
+<td align="center">%esi</td>
+<td align="center">%si</td>
+<td align="center">%sil</td>
+<td align="center">第2个参数</td>
+</tr>
+<tr>
+<td align="center">%rdi</td>
+<td align="center">%edi</td>
+<td align="center">%di</td>
+<td align="center">%dil</td>
+<td align="center">第1个参数</td>
+</tr>
+<tr>
+<td align="center">%rbp</td>
+<td align="center">%ebp</td>
+<td align="center">%bp</td>
+<td align="center">%bpl</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%rsp</td>
+<td align="center">%esp</td>
+<td align="center">%sp</td>
+<td align="center">%spl</td>
+<td align="center">栈指针</td>
+</tr>
+<tr>
+<td align="center">%r8</td>
+<td align="center">%r8d</td>
+<td align="center">%r8w</td>
+<td align="center">%r8b</td>
+<td align="center">第5个参数</td>
+</tr>
+<tr>
+<td align="center">%r9</td>
+<td align="center">%r9d</td>
+<td align="center">%r9w</td>
+<td align="center">%r9b</td>
+<td align="center">第6个参数</td>
+</tr>
+<tr>
+<td align="center">%r10</td>
+<td align="center">%r10d</td>
+<td align="center">%r10w</td>
+<td align="center">%r10b</td>
+<td align="center">调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r11</td>
+<td align="center">%r11d</td>
+<td align="center">%r11w</td>
+<td align="center">%r11b</td>
+<td align="center">调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r12</td>
+<td align="center">%r12d</td>
+<td align="center">%r12w</td>
+<td align="center">%r12b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r13</td>
+<td align="center">%r13d</td>
+<td align="center">%r13w</td>
+<td align="center">%r13b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r14</td>
+<td align="center">%r14d</td>
+<td align="center">%r14w</td>
+<td align="center">%r14b</td>
+<td align="center">被调用者保存</td>
+</tr>
+<tr>
+<td align="center">%r15</td>
+<td align="center">%r15d</td>
+<td align="center">%r15w</td>
+<td align="center">%r15b</td>
+<td align="center">被调用者保存</td>
+</tr>
+</tbody></table>
+<p>注：%rip是程序计数器，与这16个不同。</p>
+<ul>
+<li>调用者保存是指当P函数调用Q函数时，该寄存器中的内容由调用者P负责保存，Q可以直接使用该寄存器。</li>
+<li>被调用者保存是指当P函数调用Q函数时，该寄存器中的内容由被调用者Q负责保存，Q在使用这些寄存器前应当先把这些寄存器内的值存入栈中，Q返回之前应当将对应的值从栈中恢复到寄存器上。</li>
+</ul>
+<p><strong>数据类型</strong></p>
+<p>以下是64位结构上对应的数据类型。Intel用术语“字word”表示16位的数据类型；byte表示字节，long word表示32位，q表示64位</p>
+<table>
+<thead>
+<tr>
+<th align="center">C声明</th>
+<th align="center">Intel数据类型</th>
+<th align="center">汇编代码后缀</th>
+<th align="center">大小(字节)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">char</td>
+<td align="center">字节</td>
+<td align="center">b</td>
+<td align="center">1</td>
+</tr>
+<tr>
+<td align="center">short</td>
+<td align="center">字    w</td>
+<td align="center">2</td>
+<td align="center"></td>
+</tr>
+<tr>
+<td align="center">int</td>
+<td align="center">双字</td>
+<td align="center">l</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="center">long</td>
+<td align="center">四字</td>
+<td align="center">q</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">char*</td>
+<td align="center">四字</td>
+<td align="center">q</td>
+<td align="center">8</td>
+</tr>
+<tr>
+<td align="center">float</td>
+<td align="center">单精度</td>
+<td align="center">s</td>
+<td align="center">4</td>
+</tr>
+<tr>
+<td align="center">double</td>
+<td align="center">双精度</td>
+<td align="center">l</td>
+<td align="center">8</td>
+</tr>
+</tbody></table>
+<p><strong>cpu寻址</strong></p>
+<p>cpu操作数据就需要知道数据的地址，通过寻址来实现。寻址分为直接寻址和间接寻址。以下做一些解释。</p>
+<p>操作数： </p>
+<ul>
+<li>立即数 $标准C表示法表示的整数 </li>
+<li>寄存器 R[ra] </li>
+<li>内存引用 Mb[Addr]<br>Imm(rb, ri, s): 有效地址 Imm+R[rb]+R[ri]<em>s; *注意两个rb,ri都必须是64位寄存器，比例因子s必须是1, 2, 4或8</em></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">类型</th>
+<th align="center">格式</th>
+<th align="center">操作数值</th>
+<th align="center">名称</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">立即数</td>
+<td align="center">$Imm</td>
+<td align="center">Imm</td>
+<td align="center">立即数寻址</td>
+</tr>
+<tr>
+<td align="center">寄存器</td>
+<td align="center">ra</td>
+<td align="center">R[ra]</td>
+<td align="center">寄存器寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm</td>
+<td align="center">M[Imm]</td>
+<td align="center">绝对寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(ra)</td>
+<td align="center">M[R[ra]</td>
+<td align="center">间接寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb)</td>
+<td align="center">M[Imm+R[rb]]</td>
+<td align="center">(基地址+偏移量)寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(rb, ri)</td>
+<td align="center">M[R[rb]+R[ri]]</td>
+<td align="center">变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb, ri)</td>
+<td align="center">M[Imm+R[rb]+R[ri]]</td>
+<td align="center">变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(, ri, s)</td>
+<td align="center">M[R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(, ri, s)</td>
+<td align="center">M[Imm+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">(rb, ri, s)</td>
+<td align="center">M[R[rb]+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">存储器</td>
+<td align="center">Imm(rb, ri, s)</td>
+<td align="center">M[Imm+R[rb]+R[ri]*s]</td>
+<td align="center">比例变址寻址</td>
+</tr>
+<tr>
+<td align="center">任何操作都不能直接进行内存到内存数据修改，要实现内存到内存的数据操作只能先将数据修改到寄存器，然后再通过寄存器修改到内存</td>
+<td align="center"></td>
+<td align="center"></td>
+<td align="center"></td>
+</tr>
+</tbody></table>
+<p>————————————————</p>
+<p>版权声明：本文为CSDN博主「WarEric」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a href="https://blog.csdn.net/WarEric/article/details/79954102" target="_blank" rel="noopener">https://blog.csdn.net/WarEric/article/details/79954102</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/" data-id="ck2ejycr900042onsbb64dq08" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-寄存器英文全称" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/" class="article-date">
+  <time datetime="2019-07-29T13:52:40.000Z" itemprop="datePublished">2019-07-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/">寄存器英文全称</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>原文链接：<a href="https://my.oschina.net/u/1777508/blog/625070" target="_blank" rel="noopener">https://my.oschina.net/u/1777508/blog/625070</a><br>2019独角兽企业重金招聘Python工程师标准&gt;&gt;&gt;  hot3.png</p>
+<p>AH&amp;AL＝AX(accumulator)：累加寄存器 </p>
+<p>BH&amp;BL＝BX(base)：基址寄存器 </p>
+<p>CH&amp;CL＝CX(count)：计数寄存器 </p>
+<p>DH&amp;DL＝DX(data)：数据寄存器 </p>
+<p>SP（Stack Pointer）：堆栈指针寄存器 </p>
+<p>BP（Base Pointer）：基址指针寄存器 </p>
+<p>SI（Source Index）：源变址寄存器 </p>
+<p>DI（Destination Index）：目的变址寄存器 </p>
+<p>IP（Instruction Pointer）：指令指针寄存器 </p>
+<p>CS（Code Segment）代码段寄存器 </p>
+<p>DS（Data Segment）：数据段寄存器 </p>
+<p>SS（Stack Segment）：堆栈段寄存器 </p>
+<p>ES（Extra Segment）：附加段寄存器 </p>
+<p>OF overflow flag 溢出标志 操作数超出机器能表示的范围表示溢出,溢出时为1. </p>
+<p>SF sign Flag 符号标志 记录运算结果的符号,结果负时为1. </p>
+<p>ZF zero flag 零标志 运算结果等于0时为1,否则为0. </p>
+<p>CF carry flag 进位标志 最高有效位产生进位时为1,否则为0. </p>
+<p>AF auxiliary carry flag 辅助进位标志 运算时,第3位向第4位产生进位时为1,否则为0. </p>
+<p>PF parity flag 奇偶标志 运算结果操作数位为1的个数为偶数个时为1,否则为0. </p>
+<p>DF direcion flag 方向标志 用于串处理.DF=1时,每次操作后使SI和DI减小.DF=0时则增大. </p>
+<p>IF interrupt flag 中断标志 IF=1时,允许CPU响应可屏蔽中断,否则关闭中断. </p>
+<p>TF trap flag 陷阱标志 用于调试单步操作.</p>
+<p>AH&amp;AL＝AX(accumulator)：累加寄存器 </p>
+<p>BH&amp;BL＝BX(base)：基址寄存器 </p>
+<p>CH&amp;CL＝CX(count)：计数寄存器 </p>
+<p>DH&amp;DL＝DX(data)：数据寄存器 </p>
+<p>SP（Stack Pointer）：堆栈指针寄存器 </p>
+<p>BP（Base Pointer）：基址指针寄存器 </p>
+<p>SI（Source Index）：源变址寄存器 </p>
+<p>DI（Destination Index）：目的变址寄存器 </p>
+<p>IP（Instruction Pointer）：指令指针寄存器 </p>
+<p>CS（Code Segment）代码段寄存器 </p>
+<p>DS（Data Segment）：数据段寄存器 </p>
+<p>SS（Stack Segment）：堆栈段寄存器 </p>
+<p>ES（Extra Segment）：附加段寄存器 </p>
+<p>OF overflow flag 溢出标志 操作数超出机器能表示的范围表示溢出,溢出时为1. </p>
+<p>SF sign Flag 符号标志 记录运算结果的符号,结果负时为1. </p>
+<p>ZF zero flag 零标志 运算结果等于0时为1,否则为0. </p>
+<p>CF carry flag 进位标志 最高有效位产生进位时为1,否则为0. </p>
+<p>AF auxiliary carry flag 辅助进位标志 运算时,第3位向第4位产生进位时为1,否则为0. </p>
+<p>PF parity flag 奇偶标志 运算结果操作数位为1的个数为偶数个时为1,否则为0. </p>
+<p>DF direcion flag 方向标志 用于串处理.DF=1时,每次操作后使SI和DI减小.DF=0时则增大. </p>
+<p>IF interrupt flag 中断标志 IF=1时,允许CPU响应可屏蔽中断,否则关闭中断. </p>
+<p>TF trap flag 陷阱标志 用于调试单步操作.</p>
+<ol>
+<li><p>通用数据传送指令. </p>
+<pre><code>MOV    传送字或字节. 
+
+MOVSX 先符号扩展,再传送. 
+
+MOVZX 先零扩展,再传送. 
+
+PUSH    把字压入堆栈. 
+
+POP    把字弹出堆栈. 
+
+PUSHA 把AX,CX,DX,BX,SP,BP,SI,DI依次压入堆栈. 
+
+POPA    把DI,SI,BP,SP,BX,DX,CX,AX依次弹出堆栈. 
+
+PUSHAD 把EAX,ECX,EDX,EBX,ESP,EBP,ESI,EDI依次压入堆栈. 
+
+POPAD 把EDI,ESI,EBP,ESP,EBX,EDX,ECX,EAX依次弹出堆栈. 
+
+BSWAP 交换32位寄存器里字节的顺序 
+
+XCHG    交换字或字节.( 至少有一个操作数为寄存器,段寄存器不可作</code></pre></li>
+</ol>
+<p>为操作数) </p>
+<pre><code>CMPXCHG 比较并交换操作数.( 第二个操作数必须为累加器AL/AX/EAX ) 
+
+XADD    先交换再累加.( 结果在第一个操作数里 ) 
+
+XLAT    字节查表转换. 
+
+       —— BX 指向一张 256 字节的表的起点, AL 为表的索引值</code></pre><p>(0-255,即 </p>
+<pre><code>           0-FFH); 返回 AL 为查表结果. ( [BX+AL]-&gt;AL ) 
+
+2. 输入输出端口传送指令. 
+
+    IN      I/O端口输入. ( 语法: IN 累加器, {端口号│DX} ) 
+
+    OUT    I/O端口输出. ( 语法: OUT {端口号│DX},累加器 ) 
+
+      输入输出端口由立即方式指定时, 其范围是 0-255; 由寄存器 DX 指</code></pre><p>定时, </p>
+<pre><code>      其范围是 0-65535. 
+
+3. 目的地址传送指令. 
+
+    LEA    装入有效地址. 
+
+      例: LEA DX,string ;把偏移地址存到DX. 
+
+    LDS    传送目标指针,把指针内容装入DS. 
+
+      例: LDS SI,string ;把段地址:偏移地址存到DS:SI. 
+
+    LES    传送目标指针,把指针内容装入ES. 
+
+      例: LES DI,string ;把段地址:偏移地址存到ES:DI. 
+
+    LFS    传送目标指针,把指针内容装入FS. 
+
+      例: LFS DI,string ;把段地址:偏移地址存到FS:DI. 
+
+    LGS    传送目标指针,把指针内容装入GS. 
+
+      例: LGS DI,string ;把段地址:偏移地址存到GS:DI. 
+
+    LSS    传送目标指针,把指针内容装入SS. 
+
+      例: LSS DI,string ;把段地址:偏移地址存到SS:DI. 
+
+4. 标志传送指令. 
+
+    LAHF    标志寄存器传送,把标志装入AH. 
+
+    SAHF    标志寄存器传送,把AH内容装入标志寄存器. 
+
+    PUSHF 标志入栈. 
+
+    POPF    标志出栈. 
+
+    PUSHD 32位标志入栈. 
+
+    POPD    32位标志出栈.</code></pre><p>转载于:<a href="https://my.oschina.net/u/1777508/blog/625070" target="_blank" rel="noopener">https://my.oschina.net/u/1777508/blog/625070</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/" data-id="ck2ejycrc00052onsdoi7daxa" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-汇编语言（第三版）王爽-读书笔记" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time datetime="2019-06-23T09:45:14.000Z" itemprop="datePublished">2019-06-23</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">汇编语言（第三版）王爽 读书笔记</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本文链接：<a href="https://blog.csdn.net/Anthony_XL/article/details/80541477" target="_blank" rel="noopener">https://blog.csdn.net/Anthony_XL/article/details/80541477</a></p>
+<p>前言：书终于看完了，在这里做一下笔记，以备忘，也与大家分享知识，第一次在CSDN上写博客，如有不足还望大家多多指正，欢迎大家在下面留言讨论！</p>
+<p>写在前面：①  想要零基础学汇编的朋友可以看这里，在这里我强烈向大家推荐王爽老师的这本《汇编语言》，真的写的非常好，思路清晰，通俗易懂，知识循序渐进，每章都有小习题、实验（还有提醒一定要完成实验，非常贴心），可以说是非常好了。</p>
+<p>②下面我要介绍的汇编语言主要是基于16位8086CPU 的，（注：汇编语言是机器相关的，而且Inter和AT&amp;T的汇编语言语法是不同的），然后是在XP系统上做的实验，汇编器用的MASM5.0</p>
+<p>③声明：本文中部分截图取自王爽老师的《汇编语言》，当然有些内容也是抄自此书</p>
+<p><strong>正文：</strong></p>
+<p>学习汇编主要就是学习寄存器和指令的使用，当然还有用于汇编器识别的伪指令等。本文以寄存器和指令为两大主线整理，主要是用于存储知识。</p>
+<p><strong>汇编相关知识：</strong></p>
+<p>①在debug中查看内存单元中的内容时都是以16进制显示的，在程序中，数默认是十进制的，在数后面加h表示为16进制，用16进制时要注意不能以字母开头表示数，如：f000h这样直接写的话是错的，应该这样写0f000h.</p>
+<p>②debug中的一些命令简介：</p>
+<p>r：查看、改变CPU寄存器的内容</p>
+<p>d：查看内存中的内容</p>
+<p>e：改写内存中的内容</p>
+<p>u：将内存中的内容解释为机器指令和对应的汇编指令</p>
+<p>t：执行cs:ip指向的内存单元处的指令</p>
+<p>a：以汇编指令的形式向内存中写入指令</p>
+<p>g：一直执行指令到指定内存单元</p>
+<p>p：直接完成子程序或中断的调用，在debug中当要执行int 21h时一定要用p命令使程序正常退出</p>
+<p>q：退出debug模式</p>
+<p>③80×25彩色字符显示模式显示缓冲区结构如下：</p>
+<p>内存地址空间中，b800h~bffffh共32KB的空间，为80×25彩色字符模式的显示缓冲区。向这个地址空间写入数据，写入的内容将立即出现在显示器上。</p>
+<p>在80×25彩色字符模式下，显示器可以显示25行，每行80个字符，每个字符可以有256种属性（背景色、前景色、闪烁、高亮等组合信息，注意：闪烁效果只有在全屏DOS下才看的到效果）。</p>
+<p>其中一个字符在显示缓冲区就要占两个字节，高位放属性，低位放ASCII码。在80×25模式下，一屏的内容在显示缓冲区中共占4000个字节。</p>
+<p>显示缓冲区分为8页，每页4KB（≈4000B），显示器可以显示任意一页的内容，一般显示第0页的内容，也就是说，通常情况下b800h~bffffh中的内容会出现在显示器上。</p>
+<p>④直接定址表中用到的数据标号简介，数据标号地址：汇编器实际将该标号翻译成其所在段中的偏移地址。在使用数据标号时，要用assume将所在段与一个sreg关联起来，并且在程序中使用前要把该段的段地址存入关联的sreg中，不然程序将发生错误。</p>
+<p>标号的唯一功能是标识，其偏移地址还要通过offset来获取；而数据标号有很多功能，它本身就可以表示其在所在段中的偏移地址，它还包含了单元的大小信息。例：数据标号 s db 1,2,3;标号 k: db 1,2,3</p>
+<p><strong>寄存器部分：</strong><br>8086有14个寄存器：ax,bx,cx,dx,si,di,sp,bp,ip,cs,ss,ds,es,psw</p>
+<p>分类：</p>
+<p>通用寄存器：ax   bx   cx   dx</p>
+<p>段地址寄存器：es   cs   ss    ds</p>
+<p>指令指针寄存器：ip</p>
+<p>其他寄存器：bx   di   si   bp （可用于间接寻址的寄存器）</p>
+<pre><code>psw (标志寄存器)
+
+sp (用于栈的寄存器)</code></pre><p>通用寄存器介绍：</p>
+<p>通用寄存器主要用途是存储数据，或做数据中转站，当然还有一些其他的特殊用途，因为计算机里面的寄存器数量实在是太有限。</p>
+<p>每个通用寄存器都是16位的，并且都可以分为两个8位的子寄存器：</p>
+<p>ah   al   bh   bl   ch   cl   dh   dl</p>
+<p>其中后面带h的代表是高8位，带l的代表低8位。如：ah为ax的高8位，al为ax的低8位</p>
+<p>ax&amp;dx：</p>
+<p>ax和dx用法基本相同，特殊用途也基本一致，其主要用途体现在div(除法指令)和mul(乘法指令)中；不过ax还有一个特殊的用途就是，用in和out读写时，只能用al或ax存储数据。</p>
+<p>in &amp; out：</p>
+<p>端口的读写指令只有两条：in和out,分别用于从端口读取数据和往端口写入数据。</p>
+<p>注意：在in和out指令中，只能使用al或ax来存放从端口中读入的数据或要发送到端口的数据。访问8位端口时用al，访问16位端口时用ax。（端口相关知识请看后面）</p>
+<p>对0~255以内的端口进行读写时，端口号为一个立即数：</p>
+<pre><code>in al,20h
+
+out 20h,al</code></pre><p>对256~65535的端口进行读写时，端口号放在dx中：</p>
+<pre><code>mov dx,3f8h
+
+in al,dx
+
+out dx,al</code></pre><p>div:</p>
+<p>格式：</p>
+<p>   div reg</p>
+<p>   div 内存单元</p>
+<p>除数：有8位和16位两种，在一个reg或内存单元中</p>
+<p>被除数：默认放在ax或dx和ax中，如果除数为8位，被除数则为16位，默认在ax中；如果除数为16位，则被除数为32位，在dx和ax中存放，dx存放高16位，ax存放低16位</p>
+<p>结果：如果除数为8位，则al存储除法操作的商，ah存储除法操作的余数；如果除数为16位，则ax存储除法操作的商，dx存储除法操作的余数</p>
+<p>（使用div时要注意可能会溢出，例如：ax=0000h，dx=0fh,bx=1h,则div bx 将发生溢出,因为ax存不下0f0000h。解决办法就是自己写一个不溢出的除法子程序）</p>
+<p>mul:</p>
+<p>格式：</p>
+<p>   mul reg</p>
+<p>   mul 内存单元</p>
+<p>两个相乘的数：两个相乘的数要么都是8位，要么都是16位。如果是8位，一个默认放在al中，另一个放在8位reg或内存字节单元中；如果是16位，一个默认在ax中，另一个放在16位reg或内存字单元中。</p>
+<p>结果：如果是8位乘法，结果默认放在ax中；如果是16位乘法，结果高位默认在dx中存放，低位在ax中。</p>
+<p>（mul应该也有溢出现象吧，没验证过）</p>
+<p>bx:</p>
+<p>bx的特殊功能主要就是像bp,si,di一样能用在[…]中来进行间接寻址，</p>
+<p>其中[bx]，[si]，[di]默认段地址都是ds,而[bp]的默认段地址是ss。</p>
+<p>如果在[…]前面指定了段地址，那就是指定的段地址了</p>
+<p>正确用法：</p>
+<p>mov ax,[bx] [si] [di] [bp]</p>
+<p>mov ax,[bx+idata] [si+idata] [di+idata] [bp+idata]</p>
+<p>mov ax,[bx+si] [bx+di] [bp+si] [bp+di]</p>
+<p>mov  ax,[bx+si+idata] [bx+di+idata]</p>
+<p>mov ax,[bp+si+idata] [bp+si+idata]   (注：idata表示一个数,1,2,3等等)</p>
+<p>错误用法：</p>
+<p>mov ax,[bx+bp]</p>
+<p>mov ax,[si+di]</p>
+<p>···这里顺便介绍一下间接寻址方式：</p>
+<p>一般用es,ds做段地址寄存器（sreg）</p>
+<p>主要形式可参考上面的，不带段寄存器的形式[…]，带段寄存器的形式sreg:[…]，注意没有这样的形式[idata]，这是错误的。然后关于idata还有一些特殊的用法:</p>
+<p>[bx+idata]等价于idata[bx] 或 [bx]idata,前面相当于属结构体形式，后面相当于数组形式(细细体会)</p>
+<p>其余形式类推</p>
+<p>cx:</p>
+<p>cx特殊用途主要是与指令jcxz,loop,rep movsb配合使用，作他们的判定条件；还有一个特殊的用途是做指令shl和shr的移动位数。</p>
+<p>jcxz:</p>
+<p>jcxz指令为有条件跳转指令，所有的有条件指令都是短转移，在对应的机器码中包含转移的位移，而不是目的地址。对IP的修改范围为:-128~127</p>
+<p>指令格式：jcxz 标号 （如果(cx)=0,转移到标号处执行）</p>
+<p>操作：当(cx)=0时,(IP)=(IP)+8位移 ；当(cx)≠0时，程序向下执行</p>
+<p>8位位移 = 标号处的地址 - jcxz指令后的第一位字节地址；</p>
+<p>8位位移的范围为-128~127，用补码表示；</p>
+<p>8位位移由编译程序在编译时算出。</p>
+<p>loop：</p>
+<p>loop指令为循环指令，所有的有循环指令都是短转移，在对应的机器码中包含转移的位移，而不是目的地址。对IP的修改范围为:-128~127</p>
+<p>指令格式：loop 标号 （(cx)=(cx)-1,如果(cx)≠0,转移到标号处执行）</p>
+<p>操作：⑴ (cx)=(cx)-1</p>
+<pre><code>⑵ 如果(cx)≠0,(IP)=(IP)+8位位移 ；如果(cx)=0，程序向下执行</code></pre><p>（注意执行loop指令时，先做cx-1然后在判断cx是否为0，所以用cx做循环次数时，直接把要循环的次数赋给cx就行了，循环就是cx次了，因为在loop执行之前已经做了一次了）</p>
+<p>8位位移 = 标号处的地址 - loop指令后的第一位字节地址；</p>
+<p>8位位移的范围为-128~127，用补码表示；</p>
+<p>8位位移由编译程序在编译时算出。</p>
+<p>rep movsb:</p>
+<p>movsb指令，将以ds:si指向的内存单元中的字节送到es:di中，然后根据标志寄存器df位的值，将si和di递增或递减。(movsb指令只做一次 )</p>
+<p>rep的作用是根据cx的值，重复执行后面的串传送指令</p>
+<p>同类指令：movsw  一次复制的是字单元</p>
+<p>rep movsb配合起来使用才是一条完整的传送指令，将原始位置ds:si的cx个字节复制给以es:di为起始地址的cx个字节单元中。其功能相当于：</p>
+<p>s:movsb</p>
+<p>   loop s</p>
+<p>由于标志寄存器的df位决定了传输的方向，我们一般用下面的指令来改变标志位df：</p>
+<p>cld指令: 将标志寄存器的df位置0</p>
+<p>std指令:将标志寄存器的df位置1</p>
+<p>shl &amp; shr：</p>
+<p>shl和shr是逻辑位移指令，其中shl是逻辑左移指令，shr是逻辑左移指令。</p>
+<p>shl功能为：</p>
+<p>（1）将一个寄存器或内存单元中的数据向左移位；</p>
+<p>（2）将最后移出的一位写入cf中；</p>
+<p>（3）最低位用0补充。</p>
+<p>shr功能为：</p>
+<p>（1）将一个寄存器或内存单元中的数据向右移位；</p>
+<p>（2）将最后移出的一位写入cf中；</p>
+<p>（3）最高位用0补充。</p>
+<p>如果移动位数大于1时，必须将移动位数放在cl中；若移动位数为1，可以直接这样写,例：shr ax,1</p>
+<p>段寄存器简介：</p>
+<p>段寄存器有四个：cs   ss    es   ds</p>
+<p>主要能用的就是es，ds，没有什么好介绍的额（手动滑稽）</p>
+<p>寄存器组合应用介绍：</p>
+<p>组合cs:ip：表示当前执行的指令所在的地址，一般无法直接改变，通过跳转指令可以改变，跳转指令后面介绍。</p>
+<p>组合ss:sp：这两个寄存器一般用做栈，栈顶的段地址存放在ss中，偏移地址存放在sp中，任意时刻，ss:sp指向栈顶元素。</p>
+<p>提到栈就必须得提到push指令，pop指令还有pushf指令和popf指令</p>
+<p>push &amp; pop:</p>
+<p>指令格式：</p>
+<p>push 寄存器    ；将一个寄存器中的数据入栈</p>
+<p>pop 寄存器     ；出栈，用一个寄存器接收出栈的数据</p>
+<p>push 段寄存器    ；将一个段寄存器中的数据入栈</p>
+<p>pop 段寄存器     ；出栈，用一个段寄存器接收出栈数据</p>
+<p>push 内存地址    ；将一个内存单元出的字入栈（注意：栈操作都是以字为单元）</p>
+<p>pop 内存单元     ；出栈，用一个内存字单元接收出栈的数据</p>
+<p>push操作：</p>
+<p>（1）sp=sp-2,ss:sp指向当前栈顶前面的元素，以当前栈顶前面的单元为新的栈顶；</p>
+<p>（2）将ax中的内容送入ss:sp指向的内存单元处，ss:sp此时指向新栈顶</p>
+<p><img src="https://img-blog.csdn.net/20180602191650426?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt=""></p>
+<p>pop操作：(与push的正好相反)</p>
+<p>（1）将ss:sp指向的内存单元处的数据送入ax中；</p>
+<p>（2）sp=sp+2,ss:sp指向当前栈顶下面的单元，以当前栈顶下面的单元为新的栈顶</p>
+<p>（注意：pop操作结束后，相应单元里面的内容并没有被删除，依然存在，只是sp移动了）</p>
+<p><img src="https://img-blog.csdn.net/20180602193020744?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt=""></p>
+<p>【注意】汇编语言中push和pop对栈越界是没有检测和处理的，只能程序员自己在使用时注意不让程序发生栈越界，因为超界是非常危险的。</p>
+<p>段寄存器ss还有一个值得注意的细节时：在debug调试中，执行完mov ss,reg（即向ss中移入数据）后会顺带执行其后面一条指令。</p>
+<p>pushf &amp; popf：</p>
+<p>pushf和popf相当于特殊的push和pop指令，pushf指令的功能是把状态寄存器压入栈，而popf指令的功能是将状态寄存器出栈（注意：状态寄存器其实和ax等普通寄存器一样，都是16位，只是它的每个位有特殊含义而已）</p>
+<p>最特殊的寄存器—状态寄存器</p>
+<p>状态寄存器（以下简称flag）中存储的信息通常被称为程序状态字（PSW）,flag主要有以下3种功能：</p>
+<p>（1）用来存储相关指令的某些执行结果；</p>
+<p>（2）用来为CPU执行相关指令提供行为依据；</p>
+<p>（3）用来控制CPU的相关工作方式。</p>
+<p>其结构如下图：</p>
+<p><img src="https://img-blog.csdn.net/20180602201251927?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70" alt=""></p>
+<p>其中1、3、5、12、13、14、15位是没有使用的，不具有任何特殊含义，其余位都有特殊含义。</p>
+<p>下面介绍各个标志位代表的含义：</p>
+<p>ZF(零标志位)：它记录相关指令执行后，其结果是否为0。如果结果为0，则zf=1;如果结果不为0，那么zf=0。</p>
+<p>PF(奇偶标志位)：它记录相关指令执行后，其结果的所有bit位中1的个数是否为偶数。如果1的个数为偶数，pf=1;如果为奇数，pf=0。</p>
+<p>SF(符号标志位)：它记录相关指令执行后，其结果是否为负。如果结果为负，sf=1；如果非负，sf=0。</p>
+<p>CF(进位标志位)：一般情况下，在进行无符号数运算的时候，它记录了运算结果的最高有效位向更高位的进位值，或从更高位的借位值。</p>
+<p>OF：of与cf类似，都是进位标志位，只不过of针对的是有符号数运算时的进位或借位信号。</p>
+<p>Df(方向标志位)：在串处理指令中，控制每次操作后si、di的增减。</p>
+<p>   df=0 每次操作后si、di递增；</p>
+<p>   df=0 每次操作后si、di递减。（前面介绍过一部分内容）</p>
+<p>cld &amp; std：</p>
+<p>cld指令置DF为0；std指令置DF为1。</p>
+<p>sti &amp; cli：</p>
+<p>sti指令置IF为1；std指令置IF为0。</p>
+<p>指令部分：<br>伪指令及操作符介绍：</p>
+<p>offset：操作符offset是由汇编器处理的符号，格式为：offset 标号，功能：取得标号的偏移地址</p>
+<p>assume：格式：assume sreg:段标号。例：assume cs:code    ;将段code与cs关联起来</p>
+<p>；：；为汇编里面的注释格式，后面跟注释内容，只能管一行，相当于c语言中的//</p>
+<p>dd &amp; dw &amp; dd：db,dw,dd来定义字节型数据，字型数据和双字型数据，例：dd 0,2,4,5.’a’</p>
+<p>dup： dup是一个操作符，它是和db,dw,dd配合使用，用来进行数据的重复，例：dd 3 dup (0),定义3个字节，值都为0，相当于db 0,0,0</p>
+<p>org： org伪指令的功能设定其后面指令的偏移地址，例：org 200h功能是，其后指令的偏移地址从200h开始</p>
+<p>汇编指令分类：</p>
+<p>1.数据传输指令：mov、push、pop、pushf、popf、xchg等，这些指令对标志寄存器没有影响</p>
+<p>2.算术运算指令：add、sub、adc、sbb、inc、dec、cmp、imul、idiv、aaa等，它们的执行结果将影响标志寄存器的sf、zf、of、cf、pf、af位。</p>
+<p>3.逻辑指令：and、or、not、xor、test、shl、shr、sal、sar、rol、ror、rcl、rcr等，除了not指令外，它们的执行结果都影响标志寄存器的相关标志位。</p>
+<p>4.转移指令：可以修改ip，或同时修改cs和ip的指令统称为转移指令。转移指令又分一下几类：</p>
+<p>（1）无条件转移指令：jmp</p>
+<p>（2）条件转移指令：jcxz、je、jb、ja、jna、jnb等</p>
+<p>（3）循环指令：loop</p>
+<p>（4）过程：call、ret、retf</p>
+<p>（5）中断：int、iret</p>
+<p>5.处理机控制指令：cld、std、cli、sti、nop、clc、cmc、stc、hlt、wait、esc、lock等，这些指令对标志寄存器或其他处理机状态进行设置。</p>
+<p>6.串处理指令：movsb、movsw、cmps、scas、lods、stos等，若要使用这些指令方便的进行批量数据的处理，则需要和rep、repe、repne等前缀指令配合使用。</p>
+<p>mov:<br>mov指令有两个操作对象，其功能是将第二个操作对象的值赋给第一个操作对象。</p>
+<p>指令格式：</p>
+<p>mov reg,数据    mov reg,sreg    mov sreg,reg    mov reg,reg    mov reg,内存单元   </p>
+<p>mov 内存单元,reg    mov sreg,内存单元    mov 内存地址,sreg</p>
+<p>这里顺便介绍一下经常与mov配合使用的伪指令byte ptr（表示进行字节操作）、word ptr（表示进行字操作）和dword ptr（表示进行双字操作，及32位操作，一般在转跳指令中才用的到）</p>
+<p>例：mov byte ptr [bx],al    ;进行字节操作，将al中一个字节的内容存入地址ds:[bx]一个字节大小的单元中</p>
+<p>mov word ptr [bx],ax    ;进行字操作，将ax中一个字的内容存入地址ds:[bx]一个字大小的单元中</p>
+<p>【注意】这样的指令时错误的{ mov sreg,数据    mov sreg,标号    mov sreg,sreg    mov 内存单元，内存单元 }段寄存器和数据之间 ，段寄存器和标号之间，段寄存器之间，内存单元之间不能直接赋值，要通过普通寄存器做中介来完成赋值操作。</p>
+<p>add &amp; sub:</p>
+<p>这两个指令非常相似，都有两个操作对象，操作结果都赋给第一个操作对象。add指令进行的是加法操作，结果赋给第一个操作对象；sub指令进行的是减法操作，第一个操作对象减第二个操作对象，结果赋给第一个操作对象。</p>
+<p>指令格式：</p>
+<p>add reg,数据    add reg,reg    add reg,内存单元    add 内存单元,reg</p>
+<p>sub reg,数据    sub reg,reg     sub reg,内存单元    sub 内存单元,reg</p>
+<p>【注意】add sreg,reg这样的指令时错误的，段寄存器和寄存器之间是不能相加减的</p>
+<p>介绍完add和sub，在介绍与他们相关的四个指令inc和dec，adc和sbb</p>
+<p>inc &amp; dec:</p>
+<p>这两个指令的操作数都只有一个操作对象，操作数可以是16位的，也可以是8位的，inc的功能是将操作数+1，dec的功能是将操作数-1。</p>
+<p>例：inc ax    ;将ax加1,与add ax,1功能一样，但效率更高</p>
+<pre><code>dec ax    ;将ax减1,与sub ax,1功能一样</code></pre><p>adc &amp; sbb:</p>
+<p>这两个指令和add,sub类似，但adc和sbb多了一个隐式的操作数cf，因为他们是要用到标志寄存器相关位的指令</p>
+<p>adc是带进位加法指令，它利用了cf上记录的进位值</p>
+<p>指令格式：adc 操作对象1，操作对象2</p>
+<p>功能：操作对象1 = 操作对象1 + 操作对象2 +cf</p>
+<p>例如指令adc ax,bx实现的功能为：(ax) = (ax) + (bx) +cf</p>
+<p>sbb是带借位减法指令，它利用了cf上记录的借位值</p>
+<p>指令格式：sbb 操作对象1，操作对象2</p>
+<p>功能：操作对象1 = 操作对象1 - 操作对象2 -cf</p>
+<p>例如指令sbb ax,bx实现的功能为：(ax) = (ax) - (bx) -cf </p>
+<p>【注意】这两个要用到标志位cf，但我们怎样才能知道cf的值了，实际上标志位的值只能有程序员自己把控，没有显视的显示方法，当需要什么值时要自己设定。一般情况下，adc指令和sbb指令都用来做加法或减法的功能扩展，一般adc指令都跟在add指令或adc指令后，而sbb指令跟在sub或sbb指令后，这个时候程序员应该自己把控add指令或sub指令执行后标志位cf的值，然后来写程序。</p>
+<p>cmp：</p>
+<p>cmp是比较指令，其功能相当于减法指令，只是不保存结果，cmp指令执行后，将对标志寄存器产生影响，其他相关指令通过识别这些被影响的标志寄存器为来得知比较结果。</p>
+<p>指令格式：cmp 操作对象1，操作对象2</p>
+<p>功能：计算操作对象1-操作对象2 但并不保存结果，仅仅根据计算结果对标志寄存器进行设置。</p>
+<p>以cmp ax,bx为例（无符号数运算）：</p>
+<p>若(ax)=(bx)，则(ax)-(bx)=0,zf=1</p>
+<p>若(ax)≠(bx)，则(ax)-(bx)≠0,zf=1</p>
+<p>若(ax)&lt;(bx)，则(ax)-(bx)将产生借位，cf=1</p>
+<p>若(ax)≥(bx)，则(ax)-(bx)不必借位，cf=0</p>
+<p>若(ax)&gt;(bx)，则(ax)-(bx)既不必借位，结果又不为0，所以cf=0且zf=0</p>
+<p>若(ax)≤(bx)，则(ax)-(bx)既可能借位，结果可能为0，所以cf=0或zf=0</p>
+<p>cmp在进行有符号数运算时由于要考虑溢出情况，分析将变得复杂起来，下面以cmp ah,bh为例，讨论进行有符号数运算时，对标志寄存器位的影响：</p>
+<p>若sf=1,of=0，无溢出，则(ah)&lt;(bh)</p>
+<p>若sf=1,of=1，of=1说明有溢出，导致实际结果为负，则逻辑上的结果为正，所以(ah)&gt;(bh)</p>
+<p>若sf=0,of=1，of=1说明有溢出，导致实际结果为正，则逻辑上的结果为负，所以(ah)&lt;(bh)</p>
+<p>若sf=0,0f=0，无溢出，则(ah)≥(bh)</p>
+<p>and &amp; or：</p>
+<p>and指令：逻辑与指令，按位进行与运算。</p>
+<p>or指令：逻辑或指令，按位进行或运算。</p>
+<p>例：mov al,01100011b</p>
+<p>and al,00111011b    ;执行后：al=00100011b</p>
+<p>mov al,01100011b</p>
+<p>or  al,00111011b     ;执行后：al=01111011b</p>
+<p>这里介绍一下and和or指令在字符处理时最常用且最高效的用法：</p>
+<p>al里存的是英文字母a<del>z,或A</del>Z的ASCII码</p>
+<p>and al,11011111b    ;将字符变大写</p>
+<p>or al,00100000b    ;将字符变小写</p>
+<p>接下里就是非常重要的内容—跳转指令的介绍了：</p>
+<p>jcxz指令和loop指令前面介绍过，这里不再赘述。值得注意的一点是，由于转移范围受到转移位移的限制，如果在源程序中出现了转移范围超界的问题，在编译的时候，编译器将报错</p>
+<p>jmp:</p>
+<p>jmp为无条件跳转指令，可以只修改ip，也可以同时修改cs和ip的值。</p>
+<p>jmp指令要给出两种信息：（1）转移的目的地址（2）转移的距离（段间转移、段内短转移、段内近转移）</p>
+<p>CPU在执行jmp指令时并不需要转移的目的地址，实际上是通过偏移地址来工作的。</p>
+<p>①依据位移进行转移的jmp指令：</p>
+<pre><code>jmp short 标号   (转到标号处执行指令)
+
+jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(ip)+16位位移；16位移=标号处的地址-jmp指令后的第一个字节的地址，用补码表示；near ptr指明此处位移为16位位移）</code></pre><p>②转移目的地址在指令中的jmp指令：</p>
+<pre><code>jmp far ptr 标号    ;此指令实现的是段间转移，又称为远转移
+
+(cs)=标号所在段的段地址；(ip)=标号在段中的偏移地址</code></pre><p>③转移地址在寄存器中的jmp指令：</p>
+<pre><code>指令格式：jmp 16位寄存器
+
+功能：(ip)=(16位reg)    ；注意：只修改ip的值</code></pre><p>④转移地址在内存中的jmp指令：</p>
+<pre><code>1.jmp word ptr 内存单元地址（段内转移）
+
+功能：从内存单元地址处开始存放着一个字，是转移的目的偏移地址
+
+2.jmp dword ptr 内存单元地址（段内转移）
+
+功能：从内存单元处开始存放着两个字，高地址处的字是转移的目的段地址，低地址处是转移的目的偏移地址</code></pre><p>call &amp; ret:</p>
+<p>call指令和ret指令经常配合使用，以实现子程序的调用，通常用法是用call指令将当前cs:ip值保存在栈中，可理解为保护现场，然后跳转执行子程序，一般子程序最后一条指令一定是ret或retf，将栈中数据出栈，修改cs:ip的值，返回主程序。</p>
+<p>ret指令用栈中的数据，修改ip的内容，相当于pop ip，从而实现近转移；</p>
+<p>retf指令用栈中的数据，修改cs和ip的内容，相当于pop ip,pop cs，从而实现远转移。</p>
+<p>ret指令操作：</p>
+<p>（1）(ip)=((ss)*16+sp)</p>
+<p>（2）(sp)=(sp)+2</p>
+<p>retf指令操作：</p>
+<p>（1）(ip)=((ss)*16+sp)</p>
+<p>（2）(sp)=(sp)+2</p>
+<p>（3）(cs)=((ss)*16+sp)</p>
+<p>（4）(sp)=(sp)+2</p>
+<p>call指令不能实现短转移，除此之外，call指令实现转移的方法和jmp指令的原理相同，具体参考jmp指令，这里不再赘述。</p>
+<p>call指令操作：</p>
+<p>（1）将当前的ip或cs和ip压入栈中    ；相当于pop ip或pop cs,pop ip</p>
+<p>（2）转移    ；相当于jmp</p>
+<p><strong>中断、端口、BIOS简介：</strong></p>
+<p>中断：</p>
+<p>任何一个通用的CPU都具备一种能力，可以在执行完当前正在执行的指令之后，检测到从CPU外部发送过来的或内部产生的一种特殊信息，并且可以立即对所受到的信息进行处理。这种特殊的信息，称之为：中断信息。</p>
+<p>8086CPU用称为中断类型码的数据来标识中断信息的来源，中断类型码为一个字节型数据，可以表示256种中断类型来源。</p>
+<p>中断过程：用中断类型码找到中断向量，并用它设置cs和ip，这个工作由CPU的硬件自动完成。CPU硬件完成这个工作的过程就叫做中断过程。其主要操作如下：</p>
+<pre><code>1.取得中断类型码N；
+
+2.pushf
+
+3.TF=0,IF=0
+
+4.push cs
+
+5.push ip
+
+6.(ip)=(n*4)，(cs)=(n*4+2)</code></pre><p>CPU处理中断的过程：首先接收中断类型码，然后根据中断类型码在中断向量表中查找中断处理程序的入口地址，然后根据地址跳转，执行中断处理程序。</p>
+<p>中断向量表就是中断处理程序的入口地址的列表，每个表项占两个字，高地址字存放段地址，低地址字存放偏移地址。内存0:0~0:3ff，大小为1KB的空间是系统存放中断处理程序入口地址的中断向量表。不过实际上，系统要处理的中断事件远没有达到256个，中断向量表中有许多空间是空的。一般中断向量表从0:200到0:2ff的256个字节的空间所对应的中断向量表项都是空的，我们可以在在这里开始存放我们的中断处理程序或中断处理程序入口地址。</p>
+<p>内中断：来自CPU内部的中断信息。当CPU内部有下面情况发生时，将产生相应的中断信息：</p>
+<p>（1）除法错误    ；中断类型码为0</p>
+<p>（2）单步执行（一般debug模式下）    ；~为1</p>
+<p>（3）进行into指令    ；~为4</p>
+<p>（4）执行int指令    ；该指令格式为int n，n为字节型立即数，是提供给CPU的中断类型码</p>
+<p>外中断：来自CPU外部的中断信息。例如：当外设的输入到达时，相关芯片将向CPU发出相应的中断信息。引发外中断的外中断源一共有以下两大类：</p>
+<p>（1）可屏蔽中断：顾名思义，CPU可以不响应此类中断。当CPU检测到可屏蔽中断信息时，如果IF=1，则CPU在执行完当前指令后响应中断；如果IF=0，则不响应可屏蔽中断。</p>
+<p>（2）不可屏蔽中断：CPU必须处理的中断，对8086CPU，不可屏蔽中断的中断类型码固定为2</p>
+<p>提到中断，就提到nt和iret指令，下面来介绍着两个指令。</p>
+<p>int &amp; iret：</p>
+<p>int指令格式：int n，n为中断类型码</p>
+<p>功能：引发中断过程</p>
+<p>过程：</p>
+<p>（1）取中断类型码n</p>
+<p>（2）标志寄存器入栈，IF=0，TF=0</p>
+<p>（3）cs、ip入栈</p>
+<p>（4）(ip)=(n<em>4)，(cs)=(n</em>4+2)    ;可见int指令的最终功能和call指令相似，都是调用一段程序</p>
+<p>iret指令与ret指令雷士,其操作等价于：pop ip，pop cs，popf</p>
+<p>端口：</p>
+<p>在PC机系统中，和CPU通过总线相连的芯片除了各种存储器外，还有以下三种芯片：</p>
+<p>（1）各种接口卡（比如，网卡、显卡）上的接口芯片，它们控制接口卡进行工作</p>
+<p>（2）主板上的接口芯片，CPU通过他们对外部外设进行访问</p>
+<p>（3）其他芯片，用来存储相关的系统信息，或进行相关的输入输出处理</p>
+<p>在这些芯片中，都有一组可以有CPU读写的寄存器，CPU将这些寄存器都当做端口，对它们进行统一编址，从而建立了一个统一的端口地址空间，每个端口在地址空间中都有一个地址。对端口的读写指令只有两条：in和out，分别用于从端口读取数据和往端口写入数据。</p>
+<p>BIOS：</p>
+<p>在系统板的ROM中存放着一套程序，成为BIOS（基本输入输出系统），BIOS中主要包含以下部分内容：</p>
+<p>（1）硬件系统的检测和初始化程序；</p>
+<p>（2）外部中断和内部中断的中断例程：</p>
+<p>（3）用于对硬件设备进行I/O操作的中断例程；、</p>
+<p>（4）其他和硬件系统相关的中断例程。</p>
+<p>（操作系统DOS也提供了中断例程，这些例程同时也是很好的工具）</p>
+<p>开机后，CPU自动进入到ffff:0单元处执行，此处有一条跳转指令，CPU执行该指令后，转去执行BIOS中的硬件系统检测和初始化程序。初始化程序将建立BIOS所支持的中断向量，即将BIOS提供的中断例程的入口地址登记在中断向量表中。</p>
+<p>硬件系统检测和初始化完成后，调用int 19h进行操作系统的引导。</p>
+<p>如果设为从软盘启动操作系统，则int 19h将主要完成以下工作：</p>
+<p>（1）控制0号软驱，读取软盘0道0面1扇区的内容到0:7c00h</p>
+<p>（2）将cs:ip指向0:7c00h</p>
+<p>软盘的0道0面1扇区中装有操作系统引导程序。int 19h将其装到0:7c00h处后，设置CPU从0:7c00h开始执行此处的引导程序，操作系统被激活，控制计算机。如果在0号软驱中没有软盘，或发生软盘I/O错误，则int 19h将完成以下主要任务：</p>
+<p>（1）读取硬盘C的0道0面1扇区的内容到0:7c00h</p>
+<p>（2）将cs:ip指向0:7c00h</p>
+<p>其他硬件相关知识：</p>
+<p>具体的硬件知识太繁杂，这里只是将书中提到的一些知识列出来，并不做深入的讨论与讲解，如果要了解详情的，请自行到网上查找相关资料。</p>
+<p>int 10h中断例程有设置光标位置的功能；</p>
+<p>PC机中，有一个CMOS RAM芯片，里面有一个实时钟和一个有一个128个存储单元的RAM存储器，具体上网。</p>
+<p>PC机键盘的处理过程；</p>
+<p>int 9h中断例程提供基本的键盘输入处理；</p>
+<p>键盘缓冲区相关知识；</p>
+<p>int 16h中断例程可以读取键盘缓冲区；</p>
+<p>磁盘读写相关知识，及int 13h中断例程可以对磁盘进行读取；</p>
+<p>最后BB一下，终于写完了，真累啊，写了这么多字，还用了很多时间，希望以后能发挥作用，不要辜负了我付出的时间（手动滑稽）<br>————————————————<br>版权声明：本文为CSDN博主「Anthony_XL」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a href="https://blog.csdn.net/anthony_xl/article/details/80541477" target="_blank" rel="noopener">https://blog.csdn.net/anthony_xl/article/details/80541477</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" data-id="ck2ejycre00062ons78pr93ko" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-SystemTap使用技巧之四" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/06/08/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" class="article-date">
+  <time datetime="2019-06-08T14:01:41.000Z" itemprop="datePublished">2019-06-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/06/08/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
     </h1>
   
 
@@ -84,9 +1088,8 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>版权声明：本文为博主原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接和本声明。<br>本文链接：<a href="https://blog.csdn.net/wangzuxi/article/details/44901285" target="_blank" rel="noopener">https://blog.csdn.net/wangzuxi/article/details/44901285</a></p>
-<h2 id="1-查看内核文件中函数的执行流程"><a href="#1-查看内核文件中函数的执行流程" class="headerlink" title="1. 查看内核文件中函数的执行流程"></a>1. 查看内核文件中函数的执行流程</h2><pre><code>前段时间研究了一下Linux内核信号处理流程，记录一下用到的技巧吧。
-
-其实如果不用工具，硬是看代码去分析这个信号处理流程的话，还真的可能搞不定，因为不知道看到的代码是否得到执行，有可能都没有编译进去，所以适当的用工具去分析和调试，真的事半功倍。那信号处理从哪里入手呢，当然从系统调用开始，这就用到[SystemTap使用技巧【一】](http://www.iamlzq.club/2019/10/31/SystemTap使用技巧之一/)中讲的一个技巧，看看signal和kill系统调用在哪个文件：</code></pre><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@jusse ~# stap -l &apos;kernel.function(&quot;sys_signal&quot;)&apos;</span><br><span class="line">kernel.function(&quot;SyS_signal@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c:3525&quot;)</span><br><span class="line"></span><br><span class="line">root@jusse ~# stap -l &apos;kernel.function(&quot;sys_kill&quot;)&apos;  </span><br><span class="line">kernel.function(&quot;SyS_kill@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c:2909&quot;)</span><br></pre></td></tr></table></figure>
+<h2 id="1-查看内核文件中函数的执行流程"><a href="#1-查看内核文件中函数的执行流程" class="headerlink" title="1. 查看内核文件中函数的执行流程"></a>1. 查看内核文件中函数的执行流程</h2><p>前段时间研究了一下Linux内核信号处理流程，记录一下用到的技巧吧。<br>其实如果不用工具，硬是看代码去分析这个信号处理流程的话，还真的可能搞不定，因为不知道看到的代码是否得到执行，有可能都没有编译进去，所以适当的用工具去分析和调试，真的事半功倍。那信号处理从哪里入手呢，当然从系统调用开始，这就用到<a href="http://www.iamlzq.club/2019/10/31/SystemTap使用技巧之一/" target="_blank" rel="noopener">SystemTap使用技巧【一】</a>中讲的一个技巧，看看signal和kill系统调用在哪个文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">root@jusse ~# stap -l &apos;kernel.function(&quot;sys_signal&quot;)&apos;</span><br><span class="line">kernel.function(&quot;SyS_signal@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c:3525&quot;)</span><br><span class="line"></span><br><span class="line">root@jusse ~# stap -l &apos;kernel.function(&quot;sys_kill&quot;)&apos;  </span><br><span class="line">kernel.function(&quot;SyS_kill@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c:2909&quot;)</span><br></pre></td></tr></table></figure>
 
 <p>可见这两个系统调用是在kernel/signal.c里面实现的，定位到文件之后，就可以直接看代码了，但我还是想继续从调试入手，因为想到了<a href="http://www.iamlzq.club/2019/10/31/SystemTap使用技巧之二/" target="_blank" rel="noopener">SystemTap使用技巧【二】</a>讲到的一个技巧——跟踪进程的执行流程，内核肯定也可以跟踪代码的执行流程，于是就写了下面的SystemTap脚本：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">root@jusse ~/systemtap# cat kernel_signal_process.stp </span><br><span class="line">probe begin &#123;</span><br><span class="line">    printf(&quot;begin\n&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe kernel.function(&quot;*@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c&quot;).call &#123;</span><br><span class="line">    if (target() == pid()) &#123;</span><br><span class="line">        printf(&quot;%s -&gt; %s\n&quot;, thread_indent(4), ppfunc())</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe kernel.function(&quot;*@/build/buildd/linux-lts-trusty-3.13.0/kernel/signal.c&quot;).return &#123;</span><br><span class="line">    if (target() == pid()) &#123;</span><br><span class="line">        printf(&quot;%s &lt;- %s\n&quot;, thread_indent(-4), ppfunc())</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -117,7 +1120,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" data-id="ck2ego8xj0004hgns3hig88g2" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2019/06/08/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" data-id="ck2ejycr700032ons9t5j3hbr" class="article-share-link">Share</a>
       
       
     </footer>
@@ -129,8 +1132,8 @@
   
     <article id="post-SystemTap使用技巧之三" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" class="article-date">
-  <time datetime="2019-10-31T08:10:07.000Z" itemprop="datePublished">2019-10-31</time>
+    <a href="/2019/05/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" class="article-date">
+  <time datetime="2019-05-27T13:08:29.000Z" itemprop="datePublished">2019-05-27</time>
 </a>
     
   </div>
@@ -141,7 +1144,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
+      <a class="article-title" href="/2019/05/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
     </h1>
   
 
@@ -189,7 +1192,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" data-id="ck2ego8xh0003hgnseqb6goze" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2019/05/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" data-id="ck2ejycr400022ons4wo1ffjz" class="article-share-link">Share</a>
       
       
     </footer>
@@ -201,8 +1204,8 @@
   
     <article id="post-SystemTap使用技巧之二" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" class="article-date">
-  <time datetime="2019-10-31T08:09:55.000Z" itemprop="datePublished">2019-10-31</time>
+    <a href="/2019/05/05/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" class="article-date">
+  <time datetime="2019-05-05T02:29:28.000Z" itemprop="datePublished">2019-05-05</time>
 </a>
     
   </div>
@@ -213,7 +1216,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
+      <a class="article-title" href="/2019/05/05/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
     </h1>
   
 
@@ -291,7 +1294,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" data-id="ck2ego8x30000hgns4a59fayd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2019/05/05/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" data-id="ck2ejycrg00072onsdailgifs" class="article-share-link">Share</a>
       
       
     </footer>
@@ -303,8 +1306,8 @@
   
     <article id="post-SystemTap使用技巧之一" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" class="article-date">
-  <time datetime="2019-10-31T08:06:44.000Z" itemprop="datePublished">2019-10-31</time>
+    <a href="/2019/04/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" class="article-date">
+  <time datetime="2019-04-27T08:06:44.000Z" itemprop="datePublished">2019-04-27</time>
 </a>
     
   </div>
@@ -315,7 +1318,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
+      <a class="article-title" href="/2019/04/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
     </h1>
   
 
@@ -361,145 +1364,7 @@ stap [OPTIONS] – e SCRIPT [ARGUMENTS]</code></pre><p>比较常用和有用的�
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" data-id="ck2ego8xe0002hgnsc9n7a6bn" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-GDB高级用法" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" class="article-date">
-  <time datetime="2019-10-31T01:54:51.000Z" itemprop="datePublished">2019-10-31</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="1-条件断点"><a href="#1-条件断点" class="headerlink" title="1. 条件断点"></a>1. 条件断点</h2><p>用法：<code>break [LOCATION] [thread THREADNUM] [if CONDITION]</code></p>
-<p>test.c</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">\#include &lt;stdio.h&gt; </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">     int i,j;</span><br><span class="line">     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">     &#123;                                                                                                                                                      </span><br><span class="line">         j = i + 1;</span><br><span class="line">         printf(&quot;%d/n&quot;, j);</span><br><span class="line">     &#125;</span><br><span class="line">     return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>编译：<code>gcc -g test.c -o foo</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Breakpoint 1, main () at test.c:5</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) b 8 if j == 5</span><br><span class="line">Breakpoint 2 at 0x4004b2: file test.c, line 8.</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 2, main () at test.c:8</span><br><span class="line">8	         printf(&quot;%d/n&quot;, j);</span><br><span class="line">(gdb) p j</span><br><span class="line">$1 = 5</span><br><span class="line">(gdb) n</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) n</span><br><span class="line">7	         j = i + 1;</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">1/n2/n3/n4/n5/n6/n7/n8/n9/n10/n</span><br><span class="line">Program exited normally.</span><br><span class="line">(gdb) q</span><br><span class="line">[root@bogon learn]#</span><br></pre></td></tr></table></figure>
-<p>当j==5的时候，程序就停在那里了。这里值得注意的是，你可以使断点在指定线程中生效。只要带上thread THREADNUM即可。THREADNUM就是通过<br>info threads打印出的线程编号，例如1，2，3.</p>
-<h2 id="2-观察点"><a href="#2-观察点" class="headerlink" title="2. 观察点"></a>2. 观察点</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(gdb) watch j</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line"></span><br><span class="line">Old value = 0</span><br><span class="line">New value = 1</span><br><span class="line">main () at test.c:28</span><br><span class="line">28            printf(&quot;%d/n&quot;, j);</span><br></pre></td></tr></table></figure>
-<h2 id="3-模糊断点"><a href="#3-模糊断点" class="headerlink" title="3. 模糊断点"></a>3. 模糊断点</h2><p>通过rb命令可以批量指定符合规则的函数断点</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">(gdb) rb ngx_worker_*</span><br><span class="line">(gdb) info b</span><br><span class="line">Num     Type           Disp Enb Address            What</span><br><span class="line">1       breakpoint     keep y   0x000000000044e5d0 in ngx_worker_process_cycle at src/os/unix/ngx_process_cycle.c:848</span><br><span class="line">2       breakpoint     keep y   0x000000000044e2d0 in ngx_worker_process_exit at src/os/unix/ngx_process_cycle.c:1069</span><br><span class="line">3       breakpoint     keep y   0x000000000044dc20 in ngx_worker_process_init at src/os/unix/ngx_process_cycle.c:901</span><br><span class="line">4       breakpoint     keep y   0x00000000004ff8a0 in ngx_http_lua_ngx_worker_count at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:83</span><br><span class="line">5       breakpoint     keep y   0x00000000004ff930 in ngx_http_lua_ngx_worker_exiting at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:48</span><br><span class="line">6       breakpoint     keep y   0x00000000004ff8f0 in ngx_http_lua_ngx_worker_id at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:64</span><br><span class="line">7       breakpoint     keep y   0x00000000004ff8d0 in ngx_http_lua_ngx_worker_pid at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:56</span><br><span class="line">8       breakpoint     keep y   0x0000000000540e10 in ngx_stream_lua_ngx_worker_count at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:83</span><br><span class="line">9       breakpoint     keep y   0x0000000000540ea0 in ngx_stream_lua_ngx_worker_exiting at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:48</span><br><span class="line">10      breakpoint     keep y   0x0000000000540e60 in ngx_stream_lua_ngx_worker_id at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:64</span><br><span class="line">11      breakpoint     keep y   0x0000000000540e40 in ngx_stream_lua_ngx_worker_pid at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:56</span><br></pre></td></tr></table></figure>
-
-<h2 id="4-call命令"><a href="#4-call命令" class="headerlink" title="4. call命令"></a>4. call命令</h2><p>call func_name：调用和执行一个函数<br>(gdb) call gen_and_sork(1234, 1, 0)<br>(gdb) call printf(“abcd\n”)<br>abcd<br>$1=4<br>jump：在源程序中的另一点开始运行<br>(gdb)jump line_number</p>
-<h2 id="5-反向执行"><a href="#5-反向执行" class="headerlink" title="5. 反向执行"></a>5. 反向执行</h2><p>gdb 有一个超棒的功能叫回退</p>
-<p>这里我可以逐行或逐条指令的回退。它通过播放我们记录的寄存器状态来工作</p>
-<p><code>reverse-stepi    #回退一条指令</code><br>注意执行这条命令之前需要先执行record命令</p>
-<h2 id="6-x查看内存"><a href="#6-x查看内存" class="headerlink" title="6. x查看内存"></a>6. x查看内存</h2><p>语法：<code>x/&lt;n/f/u&gt; &lt;addr&gt;</code><br>n、f、u是可选的参数<br>n是一个正整数，表示需要显示的内存单元的个数，也就是说从当前地址向后显示几个内存单元的内容，一个内存单元的大小由后面的u定义。<br>f 表示显示的格式，参见下面。如果地址所指的是字符串，那么格式可以是s，如果地十是指令地址，那么格式可以是i。<br>u 表示从当前地址往后请求的字节数，如果不指定的话，GDB默认是4个bytes。u参数可以用下面的字符来代替，b表示单字节，h表示双字节，w表示四字 节，g表示八字节。当我们指定了字节长度后，GDB会从指内存定的内存地址开始，读写指定字节，并把其当作一个值取出来。<br><addr>表示一个内存地址。<br>注意：严格区分n和u的关系，n表示单元个数，u表示每个单元的大小。<br>输出格式</p>
-<p>一般来说，GDB会根据变量的类型输出变量的值。但你也可以自定义GDB的输出的格式。例如，你想输出一个整数的十六进制，或是二进制来查看这个整型变量的中的位的情况。要做到这样，你可以使用GDB的数据显示格式：</p>
-<p>x 按十六进制格式显示变量。<br>d 按十进制格式显示变量。<br>u 按十六进制格式显示无符号整型。<br>o 按八进制格式显示变量。<br>t 按二进制格式显示变量。<br>a 按十六进制格式显示变量。<br>c 按字符格式显示变量。<br>f 按浮点数格式显示变量。</p>
-<h2 id="7-跟踪到子进程"><a href="#7-跟踪到子进程" class="headerlink" title="7. 跟踪到子进程"></a>7. 跟踪到子进程</h2><p>(gdb) help set follow-fork-mode<br>Set debugger response to a program call of fork or vfork.<br>A fork or vfork creates a new process.  follow-fork-mode can be:<br>  parent  - the original process is debugged after a fork<br>  child   - the new process is debugged after a fork<br>The unfollowed process will continue to run.<br>By default, the debugger will follow the parent process.</p>
-<h2 id="8-多线程调试技巧"><a href="#8-多线程调试技巧" class="headerlink" title="8. 多线程调试技巧"></a>8. 多线程调试技巧</h2><p>(gdb) help set scheduler-locking<br>Set mode for locking scheduler during execution.<br>off  == no locking (threads may preempt at any time)<br>on   == full locking (no thread except the current thread may run)<br>step == scheduler locked during every single-step operation.<br>    In this mode, no other thread may run during a step command.<br>    Other threads may run while stepping over a function call (‘next’).</p>
-<h2 id="9-设置打印字符串长度"><a href="#9-设置打印字符串长度" class="headerlink" title="9. 设置打印字符串长度"></a>9. 设置打印字符串长度</h2><h2 id="10-执行外部命令"><a href="#10-执行外部命令" class="headerlink" title="10. 执行外部命令"></a>10. 执行外部命令</h2><p>(gdb) help shell<br>Execute the rest of the line as a shell command.<br>With no arguments, run an inferior shell.</p>
-<h2 id="11-gdbinit文件"><a href="#11-gdbinit文件" class="headerlink" title="11. gdbinit文件"></a>11. gdbinit文件</h2><p>GDB在启动时，会在用户主目录中寻找这个文件，并执行该文件中所有命令，文件格式为：<br>define command-alias<br>command<br>end<br>如要给“b main”取一个别名“bm”：<br>define bm<br>b main<br>end<br>此外，还可以给这个别名加上帮助说明性文字，格式为：<br>document bm<br>帮助说明性文字<br>end<br>如，给“bm”别名添加帮助说明性文字：<br>document bm<br>break at main() function<br>end<br>这样，在使用“help bm”时，GDB就会打印出“break at main() function”</p>
-<h2 id="12-自定义命令"><a href="#12-自定义命令" class="headerlink" title="12. 自定义命令"></a>12. 自定义命令</h2><p>除了在.gdbinit文件自定义命令外，还可以直接在GDB运行环境定义命令，语法相同</p>
-<h2 id="13-定义命令钩子"><a href="#13-定义命令钩子" class="headerlink" title="13. 定义命令钩子"></a>13. 定义命令钩子</h2><p>钩子用来在执行某个命令前或命令后，先执行某个或某些命令。假如想在print命令前显示一段“———-”，则：<br>define hook-print<br>echo ———-\n<br>end<br>注意“hook-”后接的必须是命令全称，不能是缩写。<br>如果想在命令执行完，再执行某个或某些命令，则：<br>#define hookpost-print<br>echo ———-\n<br>end</p>
-<h2 id="14-设置变量"><a href="#14-设置变量" class="headerlink" title="14. 设置变量"></a>14. 设置变量</h2><h2 id="15-循环"><a href="#15-循环" class="headerlink" title="15. 循环"></a>15. 循环</h2><p>GDB支持if/else/while/loop_break/loop_continue，如：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set $x=1</span><br><span class="line">(gdb) while $x==1</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;set $x=0</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;end</span><br></pre></td></tr></table></figure>
-<p>b$8 = 1<br>b$9 = 0</p>
-<h2 id="16-gdb脚本文件"><a href="#16-gdb脚本文件" class="headerlink" title="16. gdb脚本文件"></a>16. gdb脚本文件</h2><p>通过gdb的source命令我们可以将需要执行的GDB命令写到一个外部文件xxx.gdb中，实现gdb脚本编程。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set $page = testpool-&gt;free.next</span><br><span class="line">while $page != &amp;testpool.shpool-&gt;free</span><br><span class="line">        if $page-&gt;slab &gt;= 15360</span><br><span class="line">		printf&quot;page slab = %d, page=%x\n&quot;, $page-&gt;slab, $page</span><br><span class="line">		set $page = $page-&gt;next</span><br><span class="line">        end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-
-<h2 id="17-非交互模式"><a href="#17-非交互模式" class="headerlink" title="17. 非交互模式"></a>17. 非交互模式</h2><p>如果程序正在运行，我们想要查看或者修改程序运行中的变量或者内存等，怎么办呢？这时候可以采用非交互模式运行GDB。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" data-id="ck2ego8xb0001hgnsgs82f12a" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-问题排查工具介绍之ltrace" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" class="article-date">
-  <time datetime="2019-10-30T10:09:24.000Z" itemprop="datePublished">2019-10-30</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/">问题排查工具介绍之ltrace</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><strong>简介：</strong></p>
-<p>Trace library calls of a given program.</p>
-<p>ltrace命令是用来跟踪进程调用库函数的情况。</p>
-<p><strong>语法：</strong></p>
-<p>Usage: ltrace [option …] [command [arg …]]</p>
-<p><strong>常用参数：</strong></p>
-<p>  -a, –align=COLUMN  对齐具体某个列的返回值。</p>
-<p>  -c                  计算时间和调用，并在程序退出时打印摘要。</p>
-<p>  -C, –demangle      解码低级别名称（内核级）为用户级名称。</p>
-<p>  -d, –debug         打印调试信息。<br>      –dl            show calls to symbols in dlopened libraries.<br>  -e expr             改变跟踪的事件。</p>
-<p>  -f                  跟踪子进程。</p>
-<p>  -h, –help          打印帮助信息。</p>
-<p>  -i                  打印指令指针，当库调用时。</p>
-<p>  -l, –library=FILE  只打印某个库中的调用。</p>
-<p>  -L                  不打印库调用。</p>
-<p>  -n, –indent=NR     对每个调用级别嵌套以NR个空格进行缩进输出。</p>
-<p>  -o, –output=FILE   把输出定向到文件。</p>
-<p>  -p PID              附着在值为PID的进程号上进行ltrace。</p>
-<p>  -r                  打印相对时间戳。</p>
-<p>  -s STRLEN           设置打印的字符串最大长度。</p>
-<p>  -S                  显示系统调用。</p>
-<p>  -t, -tt, -ttt       打印绝对时间戳。</p>
-<p>  -T                  输出每个调用过程的时间开销。</p>
-<p>  -u USERNAME         使用某个用户id或组ID来运行命令。</p>
-<p>  -V, –version       打印版本信息，然后退出。</p>
-<p>  -x NAME             treat the global NAME like a library subroutine.</p>
-<p>Report bugs to <a href="mailto:ltrace-devel@lists.alioth.debian.org" target="_blank" rel="noopener">ltrace-devel@lists.alioth.debian.org</a></p>
-<p><strong>命令使用实例：</strong></p>
-<ol>
-<li><p>查看指定进程库函数调用情况</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@lzq ~]# ltrace -p 44802,44803 -C -i -n 4 -S -t -T</span><br><span class="line">18:16:32 [0x45030a] __errno_location()                                                 = 0x7fa51ea25768 &lt;0.000252&gt;</span><br><span class="line">18:16:32 [0x431852] gettimeofday(0x7fff7ba12670, NULL)                                 = 0 &lt;0.000265&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b627b, &quot;30&quot;, 2)                                          = 0x7b627b &lt;0.000192&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b628d, &quot;32&quot;, 2)                                          = 0x7b628d &lt;0.000183&gt;</span><br><span class="line">18:16:32 [0x4487c7] localtime_r(0x7fff7ba125a8, 0x7fff7ba12630, 0x54faaa, 12851, 0)    = 0x7fff7ba12630 &lt;0.000170&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b5d44, &quot;2019&quot;, 4)                                        = 0x7b5d44 &lt;0.000158&gt;</span><br><span class="line">18:16:32 [0x4290c9] memcpy(0x7b76fd, &quot;32&quot;, 2)                                          = 0x7b76fd &lt;0.000159&gt;</span><br><span class="line">18:16:32 [0x422f4c] memcpy(0x7fff7ba115b0, &quot;2019/10/30 18:16:32&quot;, 19)                  = 0x7fff7ba115b0 &lt;0.000175&gt;</span><br><span class="line">18:16:32 [0x4294d5] memcpy(0x7fff7ba115c5, &quot;info&quot;, 4)                                  = 0x7fff7ba115c5 &lt;0.000154&gt;</span><br><span class="line">18:16:32 [0x448858] memcpy(0x7fff7ba115ec, &quot;Interrupted system call&quot;, 23)              = 0x7fff7ba115ec &lt;0.000153&gt;</span><br><span class="line">18:16:32 [0x4230f5] write(4, &quot;2019/10/30 18:16:32 [info] 44802&quot;..., 85 &lt;unfinished ...&gt;</span><br><span class="line">18:16:32 [0x380aa0e7b0]     SYS_write(4, &quot;2019/10/30 18:16:32 [info] 44802&quot;..., 85)    = 85 &lt;0.000055&gt;</span><br><span class="line">18:16:32 [0x4230f5] &lt;... write resumed&gt; )                                              = 85 &lt;0.000429&gt;</span><br><span class="line">18:16:32 [0x450118] epoll_wait(12, 0xad3370, 512, 0xffffffff, 0 &lt;unfinished ...&gt;</span><br></pre></td></tr></table></figure>
-<p>通过这个命令可以查看指定进程库函数调用的具体情况，包括调用时间，消耗时长，指令地址。</p>
-</li>
-<li><p>以统计的形式查看库函数调用的情况</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@lzq ~]# ltrace -p 44802,44803 -C -i -n 4 -S -t -T -c</span><br><span class="line">^C% time     seconds  usecs/call     calls      function</span><br><span class="line">------ ----------- ----------- --------- --------------------</span><br><span class="line"> 49.93    4.664301     4664301         1 epoll_wait</span><br><span class="line"> 49.93    4.664030     4664030         1 SYS_epoll_wait</span><br><span class="line">  0.11    0.010485         158        66 memcpy</span><br><span class="line">  0.01    0.000510         255         2 localtime_r</span><br><span class="line">  0.00    0.000461         461         1 accept</span><br><span class="line">  0.00    0.000410         205         2 gettimeofday</span><br><span class="line">  0.00    0.000395         197         2 __errno_location</span><br><span class="line">  0.00    0.000230         230         1 write</span><br><span class="line">  0.00    0.000052          52         1 SYS_write</span><br><span class="line">  0.00    0.000037          37         1 SYS_accept</span><br><span class="line">------ ----------- ----------- --------- --------------------</span><br><span class="line">100.00    9.340911                    78 total</span><br></pre></td></tr></table></figure></li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" data-id="ck2ego8xl0005hgns31qhakzq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2019/04/27/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" data-id="ck2ejycr100012ons2bs90n6e" class="article-share-link">Share</a>
       
       
     </footer>
@@ -527,7 +1392,7 @@ stap [OPTIONS] – e SCRIPT [ARGUMENTS]</code></pre><p>比较常用和有用的�
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li></ul>
     </div>
   </div>
 
@@ -540,23 +1405,23 @@ stap [OPTIONS] – e SCRIPT [ARGUMENTS]</code></pre><p>比较常用和有用的�
       <ul>
         
           <li>
-            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
-          </li>
-        
-          <li>
-            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
-          </li>
-        
-          <li>
-            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
-          </li>
-        
-          <li>
-            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
-          </li>
-        
-          <li>
             <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/">问题排查工具介绍之ltrace</a>
+          </li>
+        
+          <li>
+            <a href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">寄存器与数据类型</a>
+          </li>
+        
+          <li>
+            <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/">寄存器英文全称</a>
+          </li>
+        
+          <li>
+            <a href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">汇编语言（第三版）王爽 读书笔记</a>
           </li>
         
       </ul>
