@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>GDB高级用法 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="1. 条件断点用法：break [LOCATION] [thread THREADNUM] [if CONDITION] test.c 1234567891011\#include &amp;lt;stdio.h&amp;gt; int main()&amp;#123;     int i,j;     for( i = 0; i &amp;lt; 10; ++i)     &amp;#123;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="GDB高级用法">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;10&#x2F;31&#x2F;GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95&#x2F;index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="1. 条件断点用法：break [LOCATION] [thread THREADNUM] [if CONDITION] test.c 1234567891011\#include &amp;lt;stdio.h&amp;gt; int main()&amp;#123;     int i,j;     for( i = 0; i &amp;lt; 10; ++i)     &amp;#123;">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-31T07:48:37.038Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-GDB高级用法" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" class="article-date">
+  <time datetime="2019-10-31T01:54:51.000Z" itemprop="datePublished">2019-10-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      GDB高级用法
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-条件断点"><a href="#1-条件断点" class="headerlink" title="1. 条件断点"></a>1. 条件断点</h2><p>用法：<code>break [LOCATION] [thread THREADNUM] [if CONDITION]</code></p>
+<p>test.c</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">\#include &lt;stdio.h&gt; </span><br><span class="line">int main()</span><br><span class="line">&#123;</span><br><span class="line">     int i,j;</span><br><span class="line">     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">     &#123;                                                                                                                                                      </span><br><span class="line">         j = i + 1;</span><br><span class="line">         printf(&quot;%d/n&quot;, j);</span><br><span class="line">     &#125;</span><br><span class="line">     return 0;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译：<code>gcc -g test.c -o foo</code></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Breakpoint 1, main () at test.c:5</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) b 8 if j == 5</span><br><span class="line">Breakpoint 2 at 0x4004b2: file test.c, line 8.</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line"></span><br><span class="line">Breakpoint 2, main () at test.c:8</span><br><span class="line">8	         printf(&quot;%d/n&quot;, j);</span><br><span class="line">(gdb) p j</span><br><span class="line">$1 = 5</span><br><span class="line">(gdb) n</span><br><span class="line">5	     for( i = 0; i &lt; 10; ++i)</span><br><span class="line">(gdb) n</span><br><span class="line">7	         j = i + 1;</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">1/n2/n3/n4/n5/n6/n7/n8/n9/n10/n</span><br><span class="line">Program exited normally.</span><br><span class="line">(gdb) q</span><br><span class="line">[root@bogon learn]#</span><br></pre></td></tr></table></figure>
+<p>当j==5的时候，程序就停在那里了。这里值得注意的是，你可以使断点在指定线程中生效。只要带上thread THREADNUM即可。THREADNUM就是通过<br>info threads打印出的线程编号，例如1，2，3.</p>
+<h2 id="2-观察点"><a href="#2-观察点" class="headerlink" title="2. 观察点"></a>2. 观察点</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">(gdb) watch j</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line">(gdb) c</span><br><span class="line">Continuing.</span><br><span class="line">Hardware watchpoint 2: j</span><br><span class="line"></span><br><span class="line">Old value = 0</span><br><span class="line">New value = 1</span><br><span class="line">main () at test.c:28</span><br><span class="line">28            printf(&quot;%d/n&quot;, j);</span><br></pre></td></tr></table></figure>
+<h2 id="3-模糊断点"><a href="#3-模糊断点" class="headerlink" title="3. 模糊断点"></a>3. 模糊断点</h2><p>通过rb命令可以批量指定符合规则的函数断点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">(gdb) rb ngx_worker_*</span><br><span class="line">(gdb) info b</span><br><span class="line">Num     Type           Disp Enb Address            What</span><br><span class="line">1       breakpoint     keep y   0x000000000044e5d0 in ngx_worker_process_cycle at src/os/unix/ngx_process_cycle.c:848</span><br><span class="line">2       breakpoint     keep y   0x000000000044e2d0 in ngx_worker_process_exit at src/os/unix/ngx_process_cycle.c:1069</span><br><span class="line">3       breakpoint     keep y   0x000000000044dc20 in ngx_worker_process_init at src/os/unix/ngx_process_cycle.c:901</span><br><span class="line">4       breakpoint     keep y   0x00000000004ff8a0 in ngx_http_lua_ngx_worker_count at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:83</span><br><span class="line">5       breakpoint     keep y   0x00000000004ff930 in ngx_http_lua_ngx_worker_exiting at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:48</span><br><span class="line">6       breakpoint     keep y   0x00000000004ff8f0 in ngx_http_lua_ngx_worker_id at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:64</span><br><span class="line">7       breakpoint     keep y   0x00000000004ff8d0 in ngx_http_lua_ngx_worker_pid at ../ngx_lua-0.10.13/src/ngx_http_lua_worker.c:56</span><br><span class="line">8       breakpoint     keep y   0x0000000000540e10 in ngx_stream_lua_ngx_worker_count at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:83</span><br><span class="line">9       breakpoint     keep y   0x0000000000540ea0 in ngx_stream_lua_ngx_worker_exiting at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:48</span><br><span class="line">10      breakpoint     keep y   0x0000000000540e60 in ngx_stream_lua_ngx_worker_id at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:64</span><br><span class="line">11      breakpoint     keep y   0x0000000000540e40 in ngx_stream_lua_ngx_worker_pid at ../ngx_stream_lua-0.0.5/src/ngx_stream_lua_worker.c:56</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-call命令"><a href="#4-call命令" class="headerlink" title="4. call命令"></a>4. call命令</h2><p>call func_name：调用和执行一个函数<br>(gdb) call gen_and_sork(1234, 1, 0)<br>(gdb) call printf(“abcd\n”)<br>abcd<br>$1=4<br>jump：在源程序中的另一点开始运行<br>(gdb)jump line_number</p>
+<h2 id="5-反向执行"><a href="#5-反向执行" class="headerlink" title="5. 反向执行"></a>5. 反向执行</h2><p>gdb 有一个超棒的功能叫回退</p>
+<p>这里我可以逐行或逐条指令的回退。它通过播放我们记录的寄存器状态来工作</p>
+<p><code>reverse-stepi    #回退一条指令</code><br>注意执行这条命令之前需要先执行record命令</p>
+<h2 id="6-x查看内存"><a href="#6-x查看内存" class="headerlink" title="6. x查看内存"></a>6. x查看内存</h2><p>语法：<code>x/&lt;n/f/u&gt; &lt;addr&gt;</code><br>n、f、u是可选的参数<br>n是一个正整数，表示需要显示的内存单元的个数，也就是说从当前地址向后显示几个内存单元的内容，一个内存单元的大小由后面的u定义。<br>f 表示显示的格式，参见下面。如果地址所指的是字符串，那么格式可以是s，如果地十是指令地址，那么格式可以是i。<br>u 表示从当前地址往后请求的字节数，如果不指定的话，GDB默认是4个bytes。u参数可以用下面的字符来代替，b表示单字节，h表示双字节，w表示四字 节，g表示八字节。当我们指定了字节长度后，GDB会从指内存定的内存地址开始，读写指定字节，并把其当作一个值取出来。<br><addr>表示一个内存地址。<br>注意：严格区分n和u的关系，n表示单元个数，u表示每个单元的大小。<br>输出格式</p>
+<p>一般来说，GDB会根据变量的类型输出变量的值。但你也可以自定义GDB的输出的格式。例如，你想输出一个整数的十六进制，或是二进制来查看这个整型变量的中的位的情况。要做到这样，你可以使用GDB的数据显示格式：</p>
+<p>x 按十六进制格式显示变量。<br>d 按十进制格式显示变量。<br>u 按十六进制格式显示无符号整型。<br>o 按八进制格式显示变量。<br>t 按二进制格式显示变量。<br>a 按十六进制格式显示变量。<br>c 按字符格式显示变量。<br>f 按浮点数格式显示变量。</p>
+<h2 id="7-跟踪到子进程"><a href="#7-跟踪到子进程" class="headerlink" title="7. 跟踪到子进程"></a>7. 跟踪到子进程</h2><p>(gdb) help set follow-fork-mode<br>Set debugger response to a program call of fork or vfork.<br>A fork or vfork creates a new process.  follow-fork-mode can be:<br>  parent  - the original process is debugged after a fork<br>  child   - the new process is debugged after a fork<br>The unfollowed process will continue to run.<br>By default, the debugger will follow the parent process.</p>
+<h2 id="8-多线程调试技巧"><a href="#8-多线程调试技巧" class="headerlink" title="8. 多线程调试技巧"></a>8. 多线程调试技巧</h2><p>(gdb) help set scheduler-locking<br>Set mode for locking scheduler during execution.<br>off  == no locking (threads may preempt at any time)<br>on   == full locking (no thread except the current thread may run)<br>step == scheduler locked during every single-step operation.<br>    In this mode, no other thread may run during a step command.<br>    Other threads may run while stepping over a function call (‘next’).</p>
+<h2 id="9-设置打印字符串长度"><a href="#9-设置打印字符串长度" class="headerlink" title="9. 设置打印字符串长度"></a>9. 设置打印字符串长度</h2><h2 id="10-执行外部命令"><a href="#10-执行外部命令" class="headerlink" title="10. 执行外部命令"></a>10. 执行外部命令</h2><p>(gdb) help shell<br>Execute the rest of the line as a shell command.<br>With no arguments, run an inferior shell.</p>
+<h2 id="11-gdbinit文件"><a href="#11-gdbinit文件" class="headerlink" title="11. gdbinit文件"></a>11. gdbinit文件</h2><p>GDB在启动时，会在用户主目录中寻找这个文件，并执行该文件中所有命令，文件格式为：<br>define command-alias<br>command<br>end<br>如要给“b main”取一个别名“bm”：<br>define bm<br>b main<br>end<br>此外，还可以给这个别名加上帮助说明性文字，格式为：<br>document bm<br>帮助说明性文字<br>end<br>如，给“bm”别名添加帮助说明性文字：<br>document bm<br>break at main() function<br>end<br>这样，在使用“help bm”时，GDB就会打印出“break at main() function”</p>
+<h2 id="12-自定义命令"><a href="#12-自定义命令" class="headerlink" title="12. 自定义命令"></a>12. 自定义命令</h2><p>除了在.gdbinit文件自定义命令外，还可以直接在GDB运行环境定义命令，语法相同</p>
+<h2 id="13-定义命令钩子"><a href="#13-定义命令钩子" class="headerlink" title="13. 定义命令钩子"></a>13. 定义命令钩子</h2><p>钩子用来在执行某个命令前或命令后，先执行某个或某些命令。假如想在print命令前显示一段“———-”，则：<br>define hook-print<br>echo ———-\n<br>end<br>注意“hook-”后接的必须是命令全称，不能是缩写。<br>如果想在命令执行完，再执行某个或某些命令，则：<br>#define hookpost-print<br>echo ———-\n<br>end</p>
+<h2 id="14-设置变量"><a href="#14-设置变量" class="headerlink" title="14. 设置变量"></a>14. 设置变量</h2><h2 id="15-循环"><a href="#15-循环" class="headerlink" title="15. 循环"></a>15. 循环</h2><p>GDB支持if/else/while/loop_break/loop_continue，如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">(gdb) set $x=1</span><br><span class="line">(gdb) while $x==1</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;set $x=0</span><br><span class="line"> \&gt;p $x</span><br><span class="line"> \&gt;end</span><br></pre></td></tr></table></figure>
+<p>b$8 = 1<br>b$9 = 0</p>
+<h2 id="16-gdb脚本文件"><a href="#16-gdb脚本文件" class="headerlink" title="16. gdb脚本文件"></a>16. gdb脚本文件</h2><p>通过gdb的source命令我们可以将需要执行的GDB命令写到一个外部文件xxx.gdb中，实现gdb脚本编程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">set $page = testpool-&gt;free.next</span><br><span class="line">while $page != &amp;testpool.shpool-&gt;free</span><br><span class="line">        if $page-&gt;slab &gt;= 15360</span><br><span class="line">		printf&quot;page slab = %d, page=%x\n&quot;, $page-&gt;slab, $page</span><br><span class="line">		set $page = $page-&gt;next</span><br><span class="line">        end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
+<h2 id="17-非交互模式"><a href="#17-非交互模式" class="headerlink" title="17. 非交互模式"></a>17. 非交互模式</h2><p>如果程序正在运行，我们想要查看或者修改程序运行中的变量或者内存等，怎么办呢？这时候可以采用非交互模式运行GDB。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" data-id="ck2ego8xb0001hgnsgs82f12a" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          SystemTap使用技巧之一
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">问题排查工具介绍之ltrace</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>SystemTap使用技巧之三 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="接上篇~ 7.14 修改进程中的变量123456789101112131415161718192021222324252627282930313233343536373839root@j9 ~# cat stap_set_var.c -n          1  #include &amp;lt;stdio.h&amp;gt;     2     3  typedef struct policy &amp;#123;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SystemTap使用技巧之三">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;10&#x2F;31&#x2F;SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89&#x2F;index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="接上篇~ 7.14 修改进程中的变量123456789101112131415161718192021222324252627282930313233343536373839root@j9 ~# cat stap_set_var.c -n          1  #include &amp;lt;stdio.h&amp;gt;     2     3  typedef struct policy &amp;#123;">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-31T08:26:02.695Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-SystemTap使用技巧之三" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" class="article-date">
+  <time datetime="2019-10-31T08:10:07.000Z" itemprop="datePublished">2019-10-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SystemTap使用技巧之三
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>接上篇~</p>
+<h3 id="7-14-修改进程中的变量"><a href="#7-14-修改进程中的变量" class="headerlink" title="7.14 修改进程中的变量"></a>7.14 修改进程中的变量</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">root@j9 ~# cat stap_set_var.c -n     </span><br><span class="line">     1  #include &lt;stdio.h&gt;</span><br><span class="line">     2</span><br><span class="line">     3  typedef struct policy &#123;</span><br><span class="line">     4      int     id;</span><br><span class="line">     5  &#125; policy_t;</span><br><span class="line">     6</span><br><span class="line">     7  int main(int argc, char *argv[])</span><br><span class="line">     8  &#123;</span><br><span class="line">     9      policy_t policy;</span><br><span class="line">    10      policy_t *p = &amp;policy;</span><br><span class="line">    11      policy_t **pp;</span><br><span class="line">    12</span><br><span class="line">    13      p-&gt;id = 111;</span><br><span class="line">    14</span><br><span class="line">    15      printf(&quot;before stap set, p-&gt;id: %d\n&quot;, p-&gt;id);</span><br><span class="line">    16</span><br><span class="line">    17      pp = &amp;p;</span><br><span class="line">    18</span><br><span class="line">    19      printf(&quot;after stap set, p-&gt;id: %d, (*pp)-&gt;id: %d\n&quot;, p-&gt;id, (*pp)-&gt;id);</span><br><span class="line">    20</span><br><span class="line">    21      return 0;</span><br><span class="line">    22  &#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~# gcc -Wall -g -o ./stap_set_var ./stap_set_var.c      </span><br><span class="line"></span><br><span class="line">root@j9 ~# cat stap_set_var.stp</span><br><span class="line">probe process(&quot;./stap_set_var&quot;).statement(&quot;main@./stap_set_var.c:17&quot;)</span><br><span class="line">&#123;</span><br><span class="line">    $p-&gt;id = 222;</span><br><span class="line">    printf(&quot;$p$: %s\n&quot;, $p$)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~# stap -g stap_set_var.stp -c ./stap_set_var         </span><br><span class="line">before stap set, p-&gt;id: 111</span><br><span class="line">after stap set, p-&gt;id: 222, (*pp)-&gt;id: 222</span><br><span class="line">$p$: &#123;.id=222&#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~#</span><br></pre></td></tr></table></figure>
+
+<p>可以看出在第 17 行用 SystemTap 修改后的值在第 19 行就生效了。 需要注意的是 stap 要加-g 参数在 guru 模式下才能修改变量的值。</p>
+<h3 id="7-15-跟踪进程执行流程"><a href="#7-15-跟踪进程执行流程" class="headerlink" title="7.15 跟踪进程执行流程"></a>7.15 跟踪进程执行流程</h3><p>thread_indent(n): 补充空格 ppfunc(): 当前探测点所在的函数 在 call 探测点调用 thread_indent(4)补充 4 个空格，在 return 探测点调用 thread_indent(-4)回退 4 个空格，效果如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line">#cat trace_nginx.stp</span><br><span class="line">probe process(&quot;/home/admin/tengine/bin/nginx&quot;).function(&quot;*@src/http/ngx_http_*&quot;).call</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;%s -&gt; %s\n&quot;, thread_indent(4), ppfunc());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe process(&quot;/home/admin/tengine/bin/nginx&quot;).function(&quot;*@src/http/ngx_http_*&quot;).return</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;%s &lt;- %s\n&quot;, thread_indent(-4), ppfunc());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#stap trace_nginx.stp</span><br><span class="line">     0 nginx(11368):    -&gt; ngx_http_init_connection</span><br><span class="line">    21 nginx(11368):    &lt;- ngx_http_init_connection</span><br><span class="line">     0 nginx(11368):    -&gt; ngx_http_wait_request_handler</span><br><span class="line">    30 nginx(11368):        -&gt; ngx_http_create_request</span><br><span class="line">    41 nginx(11368):        &lt;- ngx_http_create_request</span><br><span class="line">    55 nginx(11368):        -&gt; ngx_http_process_request_line</span><br><span class="line">    72 nginx(11368):            -&gt; ngx_http_read_request_header</span><br><span class="line">    78 nginx(11368):            &lt;- ngx_http_read_request_header</span><br><span class="line">    91 nginx(11368):            -&gt; ngx_http_parse_request_line</span><br><span class="line">    99 nginx(11368):            &lt;- ngx_http_parse_request_line</span><br><span class="line">   109 nginx(11368):            -&gt; ngx_http_process_request_uri</span><br><span class="line">   115 nginx(11368):            &lt;- ngx_http_process_request_uri</span><br><span class="line">   127 nginx(11368):            -&gt; ngx_http_process_request_headers</span><br><span class="line">   138 nginx(11368):                -&gt; ngx_http_read_request_header</span><br><span class="line">   143 nginx(11368):                &lt;- ngx_http_read_request_header</span><br><span class="line">   155 nginx(11368):                -&gt; ngx_http_parse_header_line</span><br><span class="line">   163 nginx(11368):                &lt;- ngx_http_parse_header_line</span><br><span class="line">   178 nginx(11368):                -&gt; ngx_http_process_user_agent</span><br><span class="line">   185 nginx(11368):                &lt;- ngx_http_process_user_agent</span><br><span class="line">   192 nginx(11368):                -&gt; ngx_http_parse_header_line</span><br><span class="line">   198 nginx(11368):                &lt;- ngx_http_parse_header_line</span><br><span class="line">   208 nginx(11368):                -&gt; ngx_http_process_host</span><br><span class="line">   222 nginx(11368):                    -&gt; ngx_http_validate_host</span><br><span class="line">   229 nginx(11368):                    &lt;- ngx_http_validate_host</span><br><span class="line">   239 nginx(11368):                    -&gt; ngx_http_set_virtual_server</span><br><span class="line">   252 nginx(11368):                        -&gt; ngx_http_find_virtual_server</span><br><span class="line">   259 nginx(11368):                        &lt;- ngx_http_find_virtual_server</span><br><span class="line">   263 nginx(11368):                    &lt;- ngx_http_set_virtual_server</span><br><span class="line">   266 nginx(11368):                &lt;- ngx_http_process_host</span><br><span class="line">   274 nginx(11368):                -&gt; ngx_http_parse_header_line</span><br><span class="line">   279 nginx(11368):                &lt;- ngx_http_parse_header_line</span><br><span class="line">   287 nginx(11368):                -&gt; ngx_http_parse_header_line</span><br><span class="line">   292 nginx(11368):                &lt;- ngx_http_parse_header_line</span><br><span class="line"></span><br><span class="line">   .....</span><br><span class="line"></span><br><span class="line">  2072 nginx(11368):                                &lt;- ngx_http_finalize_request</span><br><span class="line">  2076 nginx(11368):                            &lt;- ngx_http_core_content_phase</span><br><span class="line">  2079 nginx(11368):                        &lt;- ngx_http_core_run_phases</span><br><span class="line">  2083 nginx(11368):                    &lt;- ngx_http_handler</span><br><span class="line">  2093 nginx(11368):                    -&gt; ngx_http_run_posted_requests</span><br><span class="line">  2100 nginx(11368):                    &lt;- ngx_http_run_posted_requests</span><br><span class="line">  2103 nginx(11368):                &lt;- ngx_http_process_request</span><br><span class="line">  2107 nginx(11368):            &lt;- ngx_http_process_request_headers</span><br><span class="line">  2111 nginx(11368):        &lt;- ngx_http_process_request_line</span><br><span class="line">  2114 nginx(11368):    &lt;- ngx_http_wait_request_handler</span><br><span class="line">     0 nginx(11368):    -&gt; ngx_http_keepalive_handler</span><br><span class="line">    26 nginx(11368):        -&gt; ngx_http_close_connection</span><br><span class="line">    79 nginx(11368):        &lt;- ngx_http_close_connection</span><br><span class="line">    83 nginx(11368):    &lt;- ngx_http_keepalive_handler</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-16-查看代码执行路径"><a href="#7-16-查看代码执行路径" class="headerlink" title="7.16 查看代码执行路径"></a>7.16 查看代码执行路径</h3><p>pp(): 输出当前被激活的探测点</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">#cat ngx_http_process_request.stp</span><br><span class="line">probe process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:*&quot;) &#123;</span><br><span class="line">    printf(&quot;%s\n&quot;, pp())</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#stap ngx_http_process_request.stp </span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2762&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2768&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2771&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2773&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2774&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2783&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2835&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2840&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2841&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2842&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2843&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2846&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2847&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2848&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2850&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2852&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).statement(&quot;ngx_http_process_request@src/http/ngx_http_request.c:2853&quot;)</span><br><span class="line">^C</span><br></pre></td></tr></table></figure>
+
+<p>可以看出该函数哪些行被执行了。</p>
+<h3 id="7-17-巧用正则匹配过滤"><a href="#7-17-巧用正则匹配过滤" class="headerlink" title="7.17 巧用正则匹配过滤"></a>7.17 巧用正则匹配过滤</h3><p>在排查问题时，可以利用一些正则匹配来获取自己想要的信息，比如下面是只收集*.j9.com 的堆栈：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">#cat debug_tengine_5xx.stp </span><br><span class="line">probe process(&quot;/home/admin/tengine/bin/t-coresystem-tengine-cdn&quot;).function(&quot;ngx_http_finalize_request&quot;).call &#123;</span><br><span class="line">    rc = $rc</span><br><span class="line">    if (rc &lt; 0) &#123;</span><br><span class="line">        host = &quot;(null)&quot;</span><br><span class="line">        if ($r-&gt;headers_in-&gt;server-&gt;len != 0) &#123;</span><br><span class="line">            host = user_string_n($r-&gt;headers_in-&gt;server-&gt;data, $r-&gt;headers_in-&gt;server-&gt;len)</span><br><span class="line">        &#125; else &#123;</span><br><span class="line">            cscf = &amp;@cast($r-&gt;srv_conf, &quot;ngx_http_core_srv_conf_t&quot;)[@var(&quot;ngx_http_core_module@src/http/ngx_http_core_module.c&quot;)-&gt;ctx_index]</span><br><span class="line">            if (cscf-&gt;server_name-&gt;len != 0) &#123;</span><br><span class="line">                 host = user_string_n(cscf-&gt;server_name-&gt;data, cscf-&gt;server_name-&gt;len)</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        if (host =~ &quot;.*\.j9\.com&quot;) &#123;</span><br><span class="line">            printf(&quot;rc: %d, host: %s\n&quot;, rc, host)</span><br><span class="line">            print_ubacktrace()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">#stap debug_tengine_5xx.stp</span><br><span class="line">WARNING: Missing unwind data for module, rerun with &apos;stap -d /lib64/libc-2.12.so&apos;</span><br><span class="line">rc: -4, host: www.j9.com</span><br><span class="line"> 0x49af2e : ngx_http_finalize_request+0xe/0x480 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x492eab : ngx_http_core_content_phase+0x2b/0x130 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x48e74d : ngx_http_core_run_phases+0x3d/0x50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x514c3c : ngx_http_lua_socket_tcp_read+0x44c/0x590 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x513150 : ngx_http_lua_socket_tcp_handler+0x30/0x50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x475b96 : ngx_event_process_posted+0x36/0x40 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47d4d8 : ngx_worker_process_cycle+0x138/0x260 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47a38a : ngx_spawn_process+0x1ca/0x5e0 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47c73c : ngx_start_worker_processes+0x7c/0x100 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47db5f : ngx_master_process_cycle+0x3af/0x9b0 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x45a740 : main+0xa90/0xb50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x3623e1ecdd [/lib64/libc-2.12.so+0x1ecdd/0x38d000]</span><br><span class="line">rc: -4, host: cdn.j9.com</span><br><span class="line"> 0x49af2e : ngx_http_finalize_request+0xe/0x480 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x492eab : ngx_http_core_content_phase+0x2b/0x130 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x48e74d : ngx_http_core_run_phases+0x3d/0x50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x514c3c : ngx_http_lua_socket_tcp_read+0x44c/0x590 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x513150 : ngx_http_lua_socket_tcp_handler+0x30/0x50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x475b96 : ngx_event_process_posted+0x36/0x40 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47d4d8 : ngx_worker_process_cycle+0x138/0x260 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47a38a : ngx_spawn_process+0x1ca/0x5e0 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47c73c : ngx_start_worker_processes+0x7c/0x100 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x47db5f : ngx_master_process_cycle+0x3af/0x9b0 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x45a740 : main+0xa90/0xb50 [/home/admin/tengine/bin/t-coresystem-tengine-cdn]</span><br><span class="line"> 0x3623e1ecdd [/lib64/libc-2.12.so+0x1ecdd/0x38d000]</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-18-关联数组用法"><a href="#7-18-关联数组用法" class="headerlink" title="7.18 关联数组用法"></a>7.18 关联数组用法</h3><p>SystemTap 的关联数组必须是全局变量，需要用 global 进行声明，其索引可以支持多达 9 项索引域,各域间以逗号隔开。支持 =, ++ 与 +=操作,其默认的初始值为 0。 例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">root@j9 ~# cat stap_array.stp </span><br><span class="line">global reads</span><br><span class="line">probe vfs.read &#123;</span><br><span class="line">    reads[execname(), pid()] ++</span><br><span class="line">&#125;</span><br><span class="line">probe timer.s(3) &#123;</span><br><span class="line">    foreach ([execname, pid] in reads) &#123;</span><br><span class="line">        printf(&quot;%s(%d) : %d \n&quot;, execname, pid, reads[execname, pid])</span><br><span class="line">    &#125;</span><br><span class="line">    print(&quot;============================\n&quot;)</span><br><span class="line">    delete reads</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~# stap stap_array.stp </span><br><span class="line">stapio(18716) : 16 </span><br><span class="line">rsyslogd(770) : 1 </span><br><span class="line">docker(743) : 3 </span><br><span class="line">IFSWatch(5594) : 30 </span><br><span class="line">QThread(5594) : 6 </span><br><span class="line">AliYunDunUpdate(1057) : 4 </span><br><span class="line">sshd(15118) : 1 </span><br><span class="line">sshd(15191) : 1 </span><br><span class="line">============================</span><br><span class="line">stapio(18716) : 16 </span><br><span class="line">sshd(15191) : 3 </span><br><span class="line">docker(743) : 3 </span><br><span class="line">IFSWatch(5594) : 30 </span><br><span class="line">sshd(15118) : 2 </span><br><span class="line">QThread(5594) : 12 </span><br><span class="line">AliYunDunUpdate(1057) : 8 </span><br><span class="line">============================</span><br><span class="line">^C</span><br><span class="line">root@j9 ~/systemtap#</span><br></pre></td></tr></table></figure>
+
+<p>也可以用+、-进行排序：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">root@j9 ~# cat stap_array.stp</span><br><span class="line">global reads</span><br><span class="line">probe vfs.read &#123;</span><br><span class="line">    reads[execname(), pid()] ++</span><br><span class="line">&#125;</span><br><span class="line">probe timer.s(3) &#123;</span><br><span class="line">    foreach ([execname, pid+] in reads) &#123;</span><br><span class="line">        printf(&quot;%s(%d) : %d \n&quot;, execname, pid, reads[execname, pid])</span><br><span class="line">    &#125;</span><br><span class="line">    print(&quot;============================\n&quot;)</span><br><span class="line">    delete reads</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~# stap stap_array.stp </span><br><span class="line">docker(743) : 3 </span><br><span class="line">rsyslogd(770) : 1 </span><br><span class="line">AliYunDunUpdate(1057) : 12 </span><br><span class="line">IFSWatch(5594) : 30 </span><br><span class="line">QThread(5594) : 12 </span><br><span class="line">sshd(15118) : 2 </span><br><span class="line">sshd(15191) : 2 </span><br><span class="line">stapio(19021) : 16 </span><br><span class="line">============================</span><br><span class="line">docker(743) : 3 </span><br><span class="line">AliYunDunUpdate(1057) : 12 </span><br><span class="line">IFSWatch(5594) : 30 </span><br><span class="line">QThread(5594) : 6 </span><br><span class="line">sshd(15118) : 1 </span><br><span class="line">sshd(15191) : 19 </span><br><span class="line">stapio(19021) : 16 </span><br><span class="line">============================</span><br><span class="line">^C</span><br><span class="line">root@j9 ~#</span><br></pre></td></tr></table></figure>
+
+<h3 id="7-19-调试内存泄漏以及内存重复释放"><a href="#7-19-调试内存泄漏以及内存重复释放" class="headerlink" title="7.19 调试内存泄漏以及内存重复释放"></a>7.19 调试内存泄漏以及内存重复释放</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line">probe begin &#123;</span><br><span class="line">    printf(&quot;=============begin============\n&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">//记录内存分配和释放的计数关联数组</span><br><span class="line">global g_mem_ref_tbl</span><br><span class="line">//记录内存分配和释放的调用堆栈关联数组</span><br><span class="line">global g_mem_bt_tbl</span><br><span class="line"></span><br><span class="line">probe process(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;).function(&quot;__libc_malloc&quot;).return, process(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;).function(&quot;__libc_calloc&quot;).return &#123;</span><br><span class="line">    if (target() == pid()) &#123;</span><br><span class="line">        if (g_mem_ref_tbl[$return] == 0) &#123;</span><br><span class="line">            g_mem_ref_tbl[$return]++</span><br><span class="line">            g_mem_bt_tbl[$return] = sprint_ubacktrace()</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe process(&quot;/lib/x86_64-linux-gnu/libc.so.6&quot;).function(&quot;__libc_free&quot;).call &#123;</span><br><span class="line">    if (target() == pid()) &#123;</span><br><span class="line">        g_mem_ref_tbl[$mem]--</span><br><span class="line"></span><br><span class="line">        if (g_mem_ref_tbl[$mem] == 0) &#123;</span><br><span class="line">            if ($mem != 0) &#123;</span><br><span class="line">                //记录上次释放的调用堆栈</span><br><span class="line">                g_mem_bt_tbl[$mem] = sprint_ubacktrace()</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; else if (g_mem_ref_tbl[$mem] &lt; 0 &amp;&amp; $mem != 0) &#123;</span><br><span class="line">            //如果调用 free 已经失衡，那就出现了重复释放内存的问题，这里输出当前调用堆栈，以及这个地址上次释放的调用堆栈</span><br><span class="line">            printf(&quot;MMMMMMMMMMMMMMMMMMMMMMMMMMMM\n&quot;)</span><br><span class="line">            printf(&quot;g_mem_ref_tbl[%p]: %d\n&quot;, $mem, g_mem_ref_tbl[$mem])</span><br><span class="line">            print_ubacktrace()</span><br><span class="line">            printf(&quot;last free backtrace:\n%s\n&quot;, g_mem_bt_tbl[$mem])</span><br><span class="line">            printf(&quot;WWWWWWWWWWWWWWWWWWWWWWWWWWWW\n&quot;)</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe end &#123;</span><br><span class="line">    //最后输出产生泄漏的内存是在哪里分配的</span><br><span class="line">    printf(&quot;=============end============\n&quot;)</span><br><span class="line">    foreach(mem in g_mem_ref_tbl) &#123;</span><br><span class="line">        if (g_mem_ref_tbl[mem] &gt; 0) &#123;</span><br><span class="line">            printf(&quot;%s\n&quot;, g_mem_bt_tbl[mem])</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>详细请看： <a href="http://blog.csdn.net/wangzuxi/article/details/44901285" target="_blank" rel="noopener">http://blog.csdn.net/wangzuxi/article/details/44901285</a></p>
+<h3 id="7-20-嵌入-C-代码"><a href="#7-20-嵌入-C-代码" class="headerlink" title="7.20 嵌入 C 代码"></a>7.20 嵌入 C 代码</h3><p>在进程 fork 出子进程时打印出进程 id 和进程名:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">root@jusse ~/systemtap# cat copy_process.stp</span><br><span class="line">function getprocname:string(task:long)</span><br><span class="line">%&#123;</span><br><span class="line">    struct task_struct *task = (struct task_struct *)STAP_ARG_task;</span><br><span class="line">    snprintf(STAP_RETVALUE, MAXSTRINGLEN, &quot;pid: %d, comm: %s&quot;, task-&gt;pid, task-&gt;comm);</span><br><span class="line">%&#125;</span><br><span class="line"></span><br><span class="line">function getprocid:long(task:long)</span><br><span class="line">%&#123;</span><br><span class="line">    struct task_struct *task = (struct task_struct *)STAP_ARG_task;</span><br><span class="line">    STAP_RETURN(task-&gt;pid);</span><br><span class="line">%&#125;</span><br><span class="line"></span><br><span class="line">probe kernel.function(&quot;copy_process&quot;).return</span><br><span class="line">&#123;</span><br><span class="line">    printf(&quot;copy_process return: %p, pid: %d, getprocname: %s, getprocid: %d\n&quot;, $return, $return-&gt;pid, getprocname($return), getprocid($return));</span><br><span class="line">&#125;</span><br><span class="line">root@jusse ~/systemtap# stap -g copy_process.stp</span><br><span class="line">copy_process return: 0xffff880039f61800, pid: 12212, getprocname: pid: 12212, comm: bash, getprocid: 12212</span><br><span class="line">copy_process return: 0xffff880039f61800, pid: 12212, getprocname: pid: 12212, comm: bash, getprocid: 12212</span><br><span class="line">copy_process return: 0xffff880039f63000, pid: 12213, getprocname: pid: 12213, comm: cc_epoll, getprocid: 12213</span><br><span class="line">copy_process return: 0xffff880039f63000, pid: 12213, getprocname: pid: 12213, comm: cc_epoll, getprocid: 12213</span><br><span class="line">copy_process return: 0xffff8800081a9800, pid: 12214, getprocname: pid: 12214, comm: cc_epoll, getprocid: 12214</span><br><span class="line">copy_process return: 0xffff8800081a9800, pid: 12214, getprocname: pid: 12214, comm: cc_epoll, getprocid: 12214</span><br><span class="line">copy_process return: 0xffff8800004d8000, pid: 12215, getprocname: pid: 12215, comm: cc_epoll, getprocid: 12215</span><br><span class="line">copy_process return: 0xffff8800004d8000, pid: 12215, getprocname: pid: 12215, comm: cc_epoll, getprocid: 12215</span><br><span class="line">copy_process return: 0xffff880000564800, pid: 12216, getprocname: pid: 12216, comm: cc_epoll, getprocid: 12216</span><br><span class="line">copy_process return: 0xffff880000564800, pid: 12216, getprocname: pid: 12216, comm: cc_epoll, getprocid: 12216</span><br><span class="line">copy_process return: 0xffff880000566000, pid: 12217, getprocname: pid: 12217, comm: cc_epoll, getprocid: 12217</span><br><span class="line">copy_process return: 0xffff880000566000, pid: 12217, getprocname: pid: 12217, comm: cc_epoll, getprocid: 12217</span><br></pre></td></tr></table></figure>
+
+<p>有三个需要注意的地方： 1 ）、SystemTap 脚本里面嵌入 C 语言代码要在每个大括号前加%前缀，是%{…… %} 而不是%{ …… }%； 2 ）、获取脚本函数参数要用 STAP_ARG_前缀； 3 ）、一般 long 等返回值用 STAP_RETURN，而 string 类型返回值要用 snprintf、strncat 等方式把字符串复制到 STAP_RETVALUE 里面。</p>
+<h3 id="7-21-调试内核模块"><a href="#7-21-调试内核模块" class="headerlink" title="7.21 调试内核模块"></a>7.21 调试内核模块</h3><p>这小节就不细讲了，这篇博客 (<a href="http://blog.chinaunix.net/uid-14528823-id-4726046.html" target="_blank" rel="noopener">http://blog.chinaunix.net/uid-14528823-id-4726046.html</a>) 写得很详细，这里只 copy 两个关键点过来记录一下： 要调试自己的内核模块，需要注意的有两个关键点： 1)、使用 SystemTap 调试内核模块，探测点的编写格式示例为： module(“ext3”).function(“ext3_*”) 2)、需要将自己的模块 cp 到 /lib/modules/uname -r/extra 目录中，否则找不到符号，如果 /lib/modules/uname -r/目录下没有 extra 这个目录，自己 mkdir 一下就可以。</p>
+<h3 id="7-22-一些错误提示及解决办法"><a href="#7-22-一些错误提示及解决办法" class="headerlink" title="7.22 一些错误提示及解决办法"></a>7.22 一些错误提示及解决办法</h3><p>错误提示 1：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ERROR: MAXACTION exceeded near keyword at debug_connection.stp:86:9</span><br><span class="line">ERROR: MAXACTION exceeded near operator &apos;-&gt;&apos; at debug_connection.stp:84:30</span><br></pre></td></tr></table></figure>
+<p>解决办法： 加上 stap 参数：-DMAXACTION=102400，如果还报这种类型的错误，只需把 102400 调成更大的值即可。</p>
+<p>错误提示 2：</p>
+<p><code>WARNING: Number of errors: 0, skipped probes: 82</code><br>解决办法： 加上-DMAXSKIPPED=102400 和-DSTP_NO_OVERLOAD 参数</p>
+<p>还有一些可以去掉限制的宏：</p>
+<p>MAXSTRINGLEN：这个宏会影响 sprintf 的 buffer 大小，默认为 512 字节。 MAXTRYLOCK：对全局变量进行 try lock 操作的次数，超过则次数还拿不到锁则放弃和跳过该探测点，默认值为 1000.全局变量多的时候可以把这个宏开大一点。</p>
+<p>（完）</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/" data-id="ck2ego8xh0003hgnseqb6goze" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          SystemTap使用技巧之四
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">SystemTap使用技巧之二</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>

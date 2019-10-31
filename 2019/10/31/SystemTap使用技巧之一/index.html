@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+
+  
+  <title>SystemTap使用技巧之一 | Hexo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="1. 简介 SystemTap 是一个 Linux 非常有用的调试（跟踪 &#x2F;探测）工具，常用于 Linux 内核或者应用程序的信息采集，比如：获取一个函数里面运行时的变 量、调用堆栈，甚至可以直接修改变量的值，对诊断性能或功能问题非 常有帮助。SystemTap 提供非常简单的命令行接口和很简洁的脚本语 言，以及非常丰富的 tapset 和例子。   2. 何时使用定位（内核）函数位置查看函数被调">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SystemTap使用技巧之一">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;10&#x2F;31&#x2F;SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80&#x2F;index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="1. 简介 SystemTap 是一个 Linux 非常有用的调试（跟踪 &#x2F;探测）工具，常用于 Linux 内核或者应用程序的信息采集，比如：获取一个函数里面运行时的变 量、调用堆栈，甚至可以直接修改变量的值，对诊断性能或功能问题非 常有帮助。SystemTap 提供非常简单的命令行接口和很简洁的脚本语 言，以及非常丰富的 tapset 和例子。   2. 何时使用定位（内核）函数位置查看函数被调">
+<meta property="og:locale" content="en">
+<meta property="og:updated_time" content="2019-10-31T08:07:11.854Z">
+<meta name="twitter:card" content="summary">
+  
+    <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/" id="logo">Hexo</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/">Home</a>
+        
+          <a class="main-nav-link" href="/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-SystemTap使用技巧之一" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" class="article-date">
+  <time datetime="2019-10-31T08:06:44.000Z" itemprop="datePublished">2019-10-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      SystemTap使用技巧之一
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h2><p> SystemTap 是一个 Linux 非常有用的调试（跟踪 /探测）工具，常用于 Linux<br> 内核或者应用程序的信息采集，比如：获取一个函数里面运行时的变<br> 量、调用堆栈，甚至可以直接修改变量的值，对诊断性能或功能问题非<br> 常有帮助。SystemTap 提供非常简单的命令行接口和很简洁的脚本语<br> 言，以及非常丰富的 tapset 和例子。  </p>
+<h2 id="2-何时使用"><a href="#2-何时使用" class="headerlink" title="2. 何时使用"></a>2. 何时使用</h2><p>定位（内核）函数位置<br>查看函数被调用时的调用堆栈、局部变量、参数<br>查看函数指针变量实际指的是哪个函数<br>查看代码的执行轨迹（哪些行被执行了）<br>查看内核或者进程的执行流程<br>调试内存泄露或者内存重复释放<br>统计函数调用次数<br>……</p>
+<h2 id="3-原理"><a href="#3-原理" class="headerlink" title="3. 原理"></a>3. 原理</h2><p>在网上找了个原理图：</p>
+<p>systemtap</p>
+<p>SystemTap 的处理流程有 5 个步骤：解析 script 文件(parse)、细化（ elaborate ）、script 文件翻译成 C 语言代码（ translate ）、编译 C 语言代码（生成内核模块）（ build ）、加载内核模块（ run ）</p>
+<p>systemtap_phase</p>
+<h2 id="4-安装"><a href="#4-安装" class="headerlink" title="4. 安装"></a>4. 安装</h2><p>SystemTap 依赖的 package： elfutils、gcc、kernel-devel、kernel-debuginfo 如果调用用户态进程，还需要该程序有调试符号，否则无法调试。 推荐使用最新稳定版的 SystemTap，目前最新稳定版为：systemtap-2.9.tar.gz</p>
+<h2 id="5-入门"><a href="#5-入门" class="headerlink" title="5. 入门"></a>5. 入门</h2><h3 id="5-1-stap-命令"><a href="#5-1-stap-命令" class="headerlink" title="5.1 stap 命令"></a>5.1 stap 命令</h3><pre><code>stap [OPTIONS] FILENAME [ARGUMENTS]
+stap [OPTIONS] - [ARGUMENTS]
+stap [OPTIONS] – e SCRIPT [ARGUMENTS]</code></pre><p>比较常用和有用的参数：<br>-e SCRIPT               Run given script.<br>-l PROBE                List matching probes.<br>-L PROBE                List matching probes and local variables.<br>-g                      guru mode<br>-D NM=VAL               emit macro definition into generated C code<br>-o FILE                 send script output to file, instead of stdout.<br>-x PID                  sets target() to PID</p>
+<p>Hello World:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">root@j9 ~/stp# cat hello-world.stp</span><br><span class="line">probe begin &#123;</span><br><span class="line">    print(&quot;===Hello World===\n&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">probe end &#123;</span><br><span class="line">    print(&quot;===GunLe===\n&quot;)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">root@j9 ~/stp# stap hello-world.stp </span><br><span class="line">===Hello World===</span><br><span class="line">^C===GunLe===</span><br><span class="line">root@j9 ~/stp# stap -e &apos;probe begin &#123; printf(&quot;Hello World!\n&quot;) exit() &#125;&apos;   </span><br><span class="line">Hello World!</span><br><span class="line">root@j9 ~/stp#</span><br></pre></td></tr></table></figure>
+
+<h3 id="5-2-staprun-命令"><a href="#5-2-staprun-命令" class="headerlink" title="5.2 staprun 命令"></a>5.2 staprun 命令</h3><pre><code>staprun [OPTIONS] MODULE [MODULE-OPTIONS]</code></pre><p>stap 命令与 staprun 命令的区别在于： stap 命令的操作对象是 stp 文件或 script 命令等，而 staprun 命令的操作对象是编译生成的内核模块。</p>
+<h2 id="6-脚本语言"><a href="#6-脚本语言" class="headerlink" title="6. 脚本语言"></a>6. 脚本语言</h2><h3 id="6-1-probe"><a href="#6-1-probe" class="headerlink" title="6.1 probe"></a>6.1 probe</h3><p>“ probe ” &lt;=&gt; “探测”, 是 SystemTap 进行具体地收集数据的关键字。 systemtap_probe</p>
+<p>“ probe point ” 是 probe 动作的时机，也称探测点。也就是 probe 程序监视的某事件点，一旦侦测的事件触发了，则 probe 将从此处插入内核或者用户进程中。 “ probe handle ” 是当 probe 插入内核或者用户进程后所做的具体动作。</p>
+<p>probe 用法：</p>
+<pre><code>probe probe-point { statement }</code></pre><p>在 Hello World 例子中 begin 和 end 就是 probe-point，statement 就是该探测点的处理逻辑，在 Hello World 例子中 statement 只有一行 print，statement 可以是复杂的代码块。 探测点语法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">kernel.function(PATTERN)</span><br><span class="line">kernel.function(PATTERN).call</span><br><span class="line">kernel.function(PATTERN).return</span><br><span class="line">kernel.function(PATTERN).return.maxactive(VALUE)</span><br><span class="line">kernel.function(PATTERN).inline</span><br><span class="line">kernel.function(PATTERN).label(LPATTERN)</span><br><span class="line">module(MPATTERN).function(PATTERN)</span><br><span class="line">module(MPATTERN).function(PATTERN).call</span><br><span class="line">module(MPATTERN).function(PATTERN).return.maxactive(VALUE)</span><br><span class="line">module(MPATTERN).function(PATTERN).inline</span><br><span class="line">kernel.statement(PATTERN)</span><br><span class="line">kernel.statement(ADDRESS).absolute</span><br><span class="line">module(MPATTERN).statement(PATTERN)</span><br><span class="line">process(PROCESSPATH).function(PATTERN)</span><br><span class="line">process(PROCESSPATH).function(PATTERN).call</span><br><span class="line">process(PROCESSPATH).function(PATTERN).return</span><br><span class="line">process(PROCESSPATH).function(PATTERN).inline</span><br><span class="line">process(PROCESSPATH).statement(PATTERN)</span><br></pre></td></tr></table></figure>
+
+<p>PATTERN 语法为：</p>
+<p><code>func[@file]</code><br><code>func@file:linenumber</code></p>
+<p>例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">kernel.function(&quot;*init*&quot;)</span><br><span class="line">module(&quot;ext3&quot;).function(&quot;*&quot;)</span><br><span class="line">kernel.statement(&quot;*@kernel/time.c:296&quot;)</span><br><span class="line">process(&quot;/home/admin/tengine/bin/nginx&quot;).function(&quot;ngx_http_process_request&quot;)</span><br></pre></td></tr></table></figure>
+<p>在 return 探测点可以用$return 获取该函数的返回值。 inline 函数无法安装.return 探测点，也无法用$return 获取其返回值。</p>
+<h3 id="6-2-基本语法"><a href="#6-2-基本语法" class="headerlink" title="6.2 基本语法"></a>6.2 基本语法</h3><p>SystemTap 脚本语法比较简单，与 C 语言类似，只是每一行结尾”;”是可选的。主要语句如下： if/else、while、for/foreach、break/continue、return、next、delete、try/catch 其中： next：主要在 probe 探测点逻辑处理中使用，调用此语句时，立刻从调用函数中退出。不同于 exit()的是，next 只是退出当前的调用函数，而此 SystemTap 并没有终了，但 exit()则会终止 SystemTap。</p>
+<h4 id="6-2-1-变量"><a href="#6-2-1-变量" class="headerlink" title="6.2.1 变量"></a>6.2.1 变量</h4><p>不需要明确声明变量类型，脚本语言会根据函数参数等自动判断变量是什么类型的。 局部变量：在声明的 probe 和 block （”{ }“范围内的部分）内有效。 全局变量：用” global “声明的变量，在此 SystemTap 的整个动作过程中都有效。全局变量的声明位置没有具体要求。需要注意的是，全局变量默认有锁保护，使用过多会有性能损失，如果用全局变量保存指针，可能出现指针所指的内容被进程修改，在探测点中拿不到真正的数据。 获取进程中的变量（全局变量、局部变量、参数）直接在变量名前面加$即可（后面会有例子）</p>
+<h4 id="6-2-2-注释"><a href="#6-2-2-注释" class="headerlink" title="6.2.2 注释"></a>6.2.2 注释</h4><p># …… ：Shell 语言风格<br>//…… ：C++语言风格<br> /*……*/ ：C 语言风格</p>
+<h4 id="6-2-3-操作符"><a href="#6-2-3-操作符" class="headerlink" title="6.2.3 操作符"></a>6.2.3 操作符</h4><p>比较运算符、算数运算符基本上与 C 语言一样，需要特别指出的是： (1)、.操作符：连接两个字符串，类似于 php ； (2)、=<del>和!</del>：正则匹配和正则不匹配；</p>
+<h4 id="6-2-4-函数"><a href="#6-2-4-函数" class="headerlink" title="6.2.4 函数"></a>6.2.4 函数</h4><p>函数定义例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">function indent:string (delta:long)&#123;</span><br><span class="line">  return _generic_indent(-1, &quot;&quot;,  delta)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">function _generic_indent (idx, desc, delta)</span><br><span class="line">&#123;</span><br><span class="line">  ts = __indent_timestamp ()</span><br><span class="line">  if (! _indent_counters[idx]) _indent_timestamps[idx] = ts</span><br><span class="line">  depth = _generic_indent_depth(idx, delta)</span><br><span class="line">  return sprintf(&quot;%6d (%d:%d) %s:%-*s&quot;, (ts - _indent_timestamps[idx]), depth, delta, desc, depth, &quot;&quot;)</span><br><span class="line">&#125;  </span><br><span class="line"></span><br><span class="line">function strlen:long(s:string) %&#123;</span><br><span class="line">    STAP_RETURN(strlen(STAP_ARG_s));</span><br><span class="line">%&#125;</span><br></pre></td></tr></table></figure>
+
+<p>官方有很多很有用的函数，详情请参考： <a href="https://sourceware.org/systemtap/tapsets/" target="_blank" rel="noopener">https://sourceware.org/systemtap/tapsets/</a> 以及在本机安装了 SystemTap 之后在目录 /usr/local/share/systemtap/tapset/下也可以看具体函数的实现以及一些奇特的用法。</p>
+<p>本文是阿里云 CDN 安防专家金九所写，下次会发布 SystemTap 使用技巧之二，欢迎沟通交流~</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/" data-id="ck2ego8xe0002hgnsc9n7a6bn" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          SystemTap使用技巧之二
+        
+      </div>
+    </a>
+  
+  
+    <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">GDB高级用法</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
+          </li>
+        
+          <li>
+            <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2019 John Doe<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/" class="mobile-nav-link">Home</a>
+  
+    <a href="/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
+  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/js/script.js"></script>
+
+
+
+  </div>
+</body>
+</html>
