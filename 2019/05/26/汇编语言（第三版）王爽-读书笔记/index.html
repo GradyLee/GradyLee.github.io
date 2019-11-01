@@ -10,14 +10,14 @@
   <meta name="description" content="本文链接：https:&#x2F;&#x2F;blog.csdn.net&#x2F;Anthony_XL&#x2F;article&#x2F;details&#x2F;80541477 前言：书终于看完了，在这里做一下笔记，以备忘，也与大家分享知识，第一次在CSDN上写博客，如有不足还望大家多多指正，欢迎大家在下面留言讨论！ 写在前面：①  想要零基础学汇编的朋友可以看这里，在这里我强烈向大家推荐王爽老师的这本《汇编语言》，真的写的非常好，思路清晰，通俗易">
 <meta property="og:type" content="article">
 <meta property="og:title" content="汇编语言（第三版）王爽 读书笔记">
-<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;06&#x2F;23&#x2F;%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0&#x2F;index.html">
+<meta property="og:url" content="http:&#x2F;&#x2F;yoursite.com&#x2F;2019&#x2F;05&#x2F;26&#x2F;%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0&#x2F;index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="本文链接：https:&#x2F;&#x2F;blog.csdn.net&#x2F;Anthony_XL&#x2F;article&#x2F;details&#x2F;80541477 前言：书终于看完了，在这里做一下笔记，以备忘，也与大家分享知识，第一次在CSDN上写博客，如有不足还望大家多多指正，欢迎大家在下面留言讨论！ 写在前面：①  想要零基础学汇编的朋友可以看这里，在这里我强烈向大家推荐王爽老师的这本《汇编语言》，真的写的非常好，思路清晰，通俗易">
 <meta property="og:locale" content="en">
 <meta property="og:image" content="https:&#x2F;&#x2F;img-blog.csdn.net&#x2F;20180602191650426?watermark&#x2F;2&#x2F;text&#x2F;aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=&#x2F;font&#x2F;5a6L5L2T&#x2F;fontsize&#x2F;400&#x2F;fill&#x2F;I0JBQkFCMA==&#x2F;dissolve&#x2F;70">
 <meta property="og:image" content="https:&#x2F;&#x2F;img-blog.csdn.net&#x2F;20180602193020744?watermark&#x2F;2&#x2F;text&#x2F;aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=&#x2F;font&#x2F;5a6L5L2T&#x2F;fontsize&#x2F;400&#x2F;fill&#x2F;I0JBQkFCMA==&#x2F;dissolve&#x2F;70">
 <meta property="og:image" content="https:&#x2F;&#x2F;img-blog.csdn.net&#x2F;20180602201251927?watermark&#x2F;2&#x2F;text&#x2F;aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=&#x2F;font&#x2F;5a6L5L2T&#x2F;fontsize&#x2F;400&#x2F;fill&#x2F;I0JBQkFCMA==&#x2F;dissolve&#x2F;70">
-<meta property="og:updated_time" content="2019-10-31T09:48:13.096Z">
+<meta property="og:updated_time" content="2019-11-01T01:12:05.903Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https:&#x2F;&#x2F;img-blog.csdn.net&#x2F;20180602191650426?watermark&#x2F;2&#x2F;text&#x2F;aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0FudGhvbnlfWEw=&#x2F;font&#x2F;5a6L5L2T&#x2F;fontsize&#x2F;400&#x2F;fill&#x2F;I0JBQkFCMA==&#x2F;dissolve&#x2F;70">
   
@@ -68,8 +68,8 @@
       <div class="outer">
         <section id="main"><article id="post-汇编语言（第三版）王爽-读书笔记" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" class="article-date">
-  <time datetime="2019-06-23T09:45:14.000Z" itemprop="datePublished">2019-06-23</time>
+    <a href="/2019/05/26/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" class="article-date">
+  <time datetime="2019-05-26T09:45:14.000Z" itemprop="datePublished">2019-05-26</time>
 </a>
     
   </div>
@@ -443,7 +443,7 @@ jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" data-id="ck2ejycre00062ons78pr93ko" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2019/05/26/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/" data-id="ck2fyltqw0009gwnsc4mi2tsy" class="article-share-link">Share</a>
       
       
     </footer>
@@ -452,7 +452,7 @@ jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(
     
 <nav id="article-nav">
   
-    <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/2019/06/22/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
@@ -461,11 +461,6 @@ jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(
       </div>
     </a>
   
-  
-    <a href="/2019/06/08/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">SystemTap使用技巧之四</div>
-    </a>
   
 </nav>
 
@@ -488,7 +483,7 @@ jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/04/">April 2019</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/10/">October 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/09/">September 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/08/">August 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/07/">July 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/06/">June 2019</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2019/05/">May 2019</a></li></ul>
     </div>
   </div>
 
@@ -501,23 +496,23 @@ jmp near ptr 标号 （此指令实现的是段内近转移，功能为：(ip)=(
       <ul>
         
           <li>
-            <a href="/2019/10/31/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
+            <a href="/2019/10/06/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E5%9B%9B/">SystemTap使用技巧之四</a>
           </li>
         
           <li>
-            <a href="/2019/10/30/%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D%E4%B9%8Bltrace/">问题排查工具介绍之ltrace</a>
+            <a href="/2019/09/21/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%89/">SystemTap使用技巧之三</a>
           </li>
         
           <li>
-            <a href="/2019/08/03/%E5%AF%84%E5%AD%98%E5%99%A8%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B/">寄存器与数据类型</a>
+            <a href="/2019/09/07/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%BA%8C/">SystemTap使用技巧之二</a>
           </li>
         
           <li>
-            <a href="/2019/07/29/%E5%AF%84%E5%AD%98%E5%99%A8%E8%8B%B1%E6%96%87%E5%85%A8%E7%A7%B0/">寄存器英文全称</a>
+            <a href="/2019/08/24/SystemTap%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7%E4%B9%8B%E4%B8%80/">SystemTap使用技巧之一</a>
           </li>
         
           <li>
-            <a href="/2019/06/23/%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC%E4%B8%89%E7%89%88%EF%BC%89%E7%8E%8B%E7%88%BD-%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/">汇编语言（第三版）王爽 读书笔记</a>
+            <a href="/2019/08/03/GDB%E9%AB%98%E7%BA%A7%E7%94%A8%E6%B3%95/">GDB高级用法</a>
           </li>
         
       </ul>
